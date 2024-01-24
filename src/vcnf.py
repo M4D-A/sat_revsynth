@@ -3,25 +3,34 @@ from pysat.card import CardEnc
 from itertools import product
 
 VariableName = str
-class Variable:
-    def __init__(self, name: VariableName, id: int, value: bool|None = None):
+class Literal:
+    def __init__(self, name: VariableName, literal_id: int, value: bool|None = None):
         self.__name = name
 
-        assert not id == 0, "ID cannot be equal to zero"
+        assert not literal_id == 0, "ID cannot be equal to zero"
         if value is None:
-            self.__id = id
+            self.__value = literal_id
         else:
-            id = abs(id)
-            self.__id = id if value else -id
+            assert literal_id > 0, "ID must be an absolute value if boolean value stated"
+            self.__value = literal_id if value else -literal_id
 
-    def __bool__(self):
-        return self.__id > 0
+    def __bool__(self) -> bool:
+        return self.__value > 0
 
     def __neg__(self):
-        return Variable(self.__name, -self.__id)
+        return Literal(self.__name, -self.__value)
 
-    def __str__(self):
-        return f"{self.__name}: {self.__bool__()} ({self.__id})"
+    def __str__(self) -> str:
+        return f"{self.__name}: {self.__bool__()} ({self.__value})"
+
+    def value(self) -> int:
+        return abs(self.__value)
+    
+    def name(self) -> str:
+        return self.__name
+
+    def __eq__(self, other) -> bool:
+        return (self.name(), self.value()) == (other.name(), other.value())
 
 
 class CNF():
@@ -48,117 +57,131 @@ class CNF():
     def to_file(self, file_name: str) -> None:
         self._cnf.to_file(file_name) # [BOTTLENECK]
 
-    def variable(self, id: int) -> Variable:
-        return Variable(str(self._v_pool.obj(id)), id, True)
+    def verify_literals(self, literals: list[Literal]) -> bool:
+        for lit in literals:
+            name = lit.name()
+            found = self.name_to_variable(name)
+            if found is None or not (lit == found):
+                return False
+        return True
 
-    def reserve_name(self, name: VariableName, internal: bool = False) -> Variable:
+    def reserve_name(self, name: VariableName, internal: bool = False) -> Literal:
         if internal:
             assert name[0].isupper(), "Name cannot start with lowercase letter for internal variables"
         else:
             assert name[0].islower(), "Name cannot start with uppercase letter for regular variables"
         assert name not in self._v_pool.obj2id, "Name already registered"
         id = self._v_pool.id(name)
-        return Variable(name, id)
+        return Literal(name, id)
 
-    def find_variable(self, name: VariableName|int) -> Variable:
-        if name is VariableName:
-            assert name in self._v_pool.obj2id.keys(), "Name not found"
-            id = self._v_pool.id(name)
-        elif name is int:
-            assert name in self._v_pool.obj2id.values(), "Id not found"
-            id = name
-            name = str(self._v_pool.obj(id))
-        else:
-            raise RuntimeError("Variables can be found only by their ids or names")
-        return Variable(name, id)
+    def name_to_variable(self, name: VariableName) -> Literal|None:
+        if name not in self._v_pool.obj2id.keys():
+            return None
+        id = self._v_pool.id(name)
+        return Literal(name, id)
 
-    def set(self, var: Variable, value: bool = True):
-        a_int = var.__id
-        self._cnf.append([a_int if value else -a_int])
+    def id_to_variable(self, id: int) -> Literal|None:
+        if id not in self._v_pool.obj2id.values():
+            return None
+        name = str(self._v_pool.obj(id))
+        return Literal(name, id)
 
-    def equals(self, var_a: Variable, var_b: Variable):
-        a_int = self.get_id(var_a)
-        b_int = self.get_id(var_b)
-        self._cnf.append([-a_int, b_int])
-        self._cnf.append([a_int, -b_int])
+    def set_literal(self, literal: Literal) -> None:
+        assert self.verify_literals([literal])
+        lval_a = literal.value()
+        self._cnf.append([lval_a])
+
+    def equals(self, literal_a: Literal, literal_b: Literal) -> None:
+        assert self.verify_literals([literal_a, literal_b])
+        lval_a = literal_a.value()
+        lval_b = literal_b.value()
+        self._cnf.append([-lval_a, lval_b])
+        self._cnf.append([lval_a, -lval_b])
     
-    def equals_and(self, a: Variable, b: list[Variable]):
-        split = self._max_clause_len
-        if split and split <= 2:
-            raise ValueError("split must be greater than 2 if set to True")
-        if not split or len(b) <= split-1:
-            a_int = self.get_id(a)
-            self._cnf.append([a_int] + [-self.get_id(b_elem) for b_elem in b])
-            for b_elem in b:
-                b_int = self.get_id(b_elem)
-                self._cnf.append([-a_int, b_int])
+    def equals_and(self, literal_a: Literal, literals_b: list[Literal]):
+        assert self.verify_literals([literal_a] + literals_b)
+        clause_len = self._max_clause_len
+        if clause_len and clause_len <= 2:
+            raise ValueError("clause_len must be greater than 2 if set to True")
+        if not clause_len or len(literals_b) <= clause_len - 1:
+            lval_a = literal_a.value()
+            self._cnf.append([lval_a] + [-b_elem.value() for b_elem in literals_b])
+            for b_elem in literals_b:
+                lval_b = b_elem.value()
+                self._cnf.append([-lval_a, lval_b])
         else:
-            _ = [self.get_id(b_elem) for b_elem in b]
-            b_cut = b[:split-1]
-            and_cut = (True, f"A{self._v_counter}")
+            _ = [b_elem.value() for b_elem in literals_b]
+            slice = literals_b[:clause_len-1]
+            aux_literal = self.reserve_name(f"A{self._v_counter}")
             self._v_counter += 1
-            self.equals_and(and_cut, b_cut)
-            self.equals_and(a, [and_cut] + b[split-1:])
+            self.equals_and(aux_literal, slice)
+            self.equals_and(literal_a, [aux_literal] + literals_b[clause_len-1:])
 
-    def equals_or(self, a: Variable, b: list[Variable]):
-        split = self._max_clause_len
-        if split and split <= 2:
-            raise ValueError("split must be greater than 2 if set to True")
-        if not split or len(b) <= split-1:
-            a_int = self.get_id(a)
-            self._cnf.append([-a_int] + [self.get_id(b_elem) for b_elem in b])
-            for b_elem in b:
-                b_int = self.get_id(b_elem)
-                self._cnf.append([a_int, -b_int])
+    def equals_or(self, literal_a: Literal, literals_b: list[Literal]):
+        assert self.verify_literals([literal_a] + literals_b)
+        clause_len = self._max_clause_len
+        if clause_len and clause_len <= 2:
+            raise ValueError("clause_len must be greater than 2 if set to True")
+        if not clause_len or len(literals_b) <= clause_len - 1:
+            lval_a = literal_a.value()
+            self._cnf.append([-lval_a] + [b_elem.value() for b_elem in literals_b])
+            for b_elem in literals_b:
+                lval_b = b_elem.value()
+                self._cnf.append([lval_a, -lval_b])
         else:
-            _ = [self.get_id(b_elem) for b_elem in b]
-            b_cut = b[:split-1]
-            or_cut = (True, f"A{self._v_counter}")
+            _ = [b_elem.value() for b_elem in literals_b]
+            slice = literals_b[:clause_len-1]
+            aux_literal = self.reserve_name(f"A{self._v_counter}")
             self._v_counter += 1
-            self.equals_or(or_cut, b_cut)
-            self.equals_or(a, [or_cut] + b[split-1:])
+            self.equals_or(aux_literal, slice)
+            self.equals_or(literal_a, [aux_literal] + literals_b[clause_len-1:])
 
-    def xor(self, a: list[Variable]):
-        split = self._max_clause_len
-        if split and split <= 2:
+    def xor(self, literals: list[Literal]):
+        assert self.verify_literals(literals)
+        clause_len = self._max_clause_len
+        if clause_len and clause_len <= 2:
             raise ValueError("split must be greater than 2 if set to True")
-        if not split or len(a) <= split:
-            ones = [[1,-1] for _ in a]
-            a_ids = [self.get_id(a_elem) for a_elem in a]
+        if not clause_len or len(literals) <= clause_len:
+            ones = [[1,-1] for _ in literals]
+            ids = [a_elem.value() for a_elem in literals]
             for prod in product(*ones):
-                if (sum(prod) - len(a) + 2) % 4 == 0:
-                    self._cnf.append([one*a_id for one, a_id in zip(prod, a_ids)])
+                if (sum(prod) - len(literals) + 2) % 4 == 0:
+                    self._cnf.append([one*a_id for one, a_id in zip(prod, ids)])
         else:
-            _ = [self.get_id(a_elem) for a_elem in a]
-            a_cut = a[:split-1]
-            xor_cut = (True, f"A{self._v_counter}")
+            _ = [a_elem.value() for a_elem in literals]
+            slice = literals[:clause_len-1]
+            aux_literal = self.reserve_name(f"A{self._v_counter}")
             self._v_counter += 1
-            self.xor([xor_cut] + a_cut)
-            self.xor([xor_cut] + a[split-1:])
+            self.xor([aux_literal] + slice)
+            self.xor([aux_literal] + literals[clause_len-1:])
 
-    def atleast(self, a: list[Variable], k: int):
-        a_id = [self.get_id(a_elem) for a_elem in a]
-        clauses = CardEnc.atleast(a_id, k, encoding=self._caridnality_encoding, vpool = self._v_pool)
+    def atleast(self, literals: list[Literal], lower_bound: int):
+        assert self.verify_literals(literals)
+        ids = [lit.value() for lit in literals]
+        clauses = CardEnc.atleast(ids, lower_bound, encoding=self._caridnality_encoding, vpool = self._v_pool)
         self._cnf.extend(clauses)
 
-    def atmost(self, a: list[Variable], k: int):
-        a_id = [self.get_id(a_elem) for a_elem in a]
-        clauses = CardEnc.atmost(a_id, k, encoding=self._caridnality_encoding, vpool = self._v_pool)
+    def atmost(self, literals: list[Literal], upper_bound: int):
+        assert self.verify_literals(literals)
+        ids = [lit.value() for lit in literals]
+        clauses = CardEnc.atleast(ids, upper_bound, encoding=self._caridnality_encoding, vpool = self._v_pool)
         self._cnf.extend(clauses)
 
-    def exactly(self, a: list[Variable], k: int):
-        a_id = [self.get_id(a_elem) for a_elem in a]
-        clauses = CardEnc.equals(a_id, k, encoding=self._caridnality_encoding, vpool = self._v_pool)
+    def exactly(self, literals: list[Literal], upper_bound: int):
+        assert self.verify_literals(literals)
+        ids = [lit.value() for lit in literals]
+        clauses = CardEnc.equals(ids, upper_bound, encoding=self._caridnality_encoding, vpool = self._v_pool)
         self._cnf.extend(clauses)
         
-    def nand(self, a: Variable, b: Variable):
-        a_id = self.get_id(a)
-        b_id = self.get_id(b)
-        self._cnf.append([-a_id, -b_id])
+    def nand(self, literal_a: Literal, literal_b: Literal) -> None:
+        assert self.verify_literals([literal_a, literal_b])
+        lval_a = literal_a.value()
+        lval_b = literal_b.value()
+        self._cnf.append([-lval_a, -lval_b])
 
-    def exclude(self, a: list[Variable]):
-        exclude_var = (True, f"A{self._v_counter}")
+    def exclude(self, literals: list[Literal]):
+        aux_literal = self.reserve_name(f"A{self._v_counter}")
         self._v_counter += 1
-        self.equals_and(exclude_var, a)
-        self.set(exclude_var, False)
+        self.equals_and(aux_literal, literals)
+        self.set_literal(-aux_literal)
 
