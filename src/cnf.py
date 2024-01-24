@@ -57,9 +57,14 @@ class CNF():
     def to_file(self, file_name: str) -> None:
         self._cnf.to_file(file_name) # [BOTTLENECK]
 
+    def check_name(self, name: VariableName) -> bool:
+        return name in self._v_pool.obj2id.keys()
+
     def verify_literals(self, literals: list[Literal]) -> bool:
         for lit in literals:
             name = lit.name()
+            if not self.check_name(name):
+                return False
             found = self.name_to_variable(name)
             if found is None or not (lit == found):
                 return False
@@ -74,15 +79,13 @@ class CNF():
         id = self._v_pool.id(name)
         return Literal(name, id)
 
-    def name_to_variable(self, name: VariableName) -> Literal|None:
-        if name not in self._v_pool.obj2id.keys():
-            return None
+    def name_to_variable(self, name: VariableName) -> Literal:
+        assert name in self._v_pool.obj2id.keys(), "Name not found in the pool"
         id = self._v_pool.id(name)
         return Literal(name, id)
 
-    def id_to_variable(self, id: int) -> Literal|None:
-        if id not in self._v_pool.obj2id.values():
-            return None
+    def id_to_variable(self, id: int) -> Literal:
+        assert id in self._v_pool.obj2id.values(), "ID not found in the pool"
         name = str(self._v_pool.obj(id))
         return Literal(name, id)
 

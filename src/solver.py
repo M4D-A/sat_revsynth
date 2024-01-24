@@ -34,7 +34,7 @@ class Solver:
             solution = self._solve_external(cnf)
         else:
             raise ValueError(f"Solver {self.__name} not supported")
-        return self._make_model(solution, cnf)
+        return self._make_model(solution)
  
     def _solve_builtin(self, cnf: CNF) -> Solution:
         builtin_solver_class = self.builtin_solvers[self.__name]
@@ -43,39 +43,38 @@ class Solver:
         if builtin_solver.solve():
             ids = builtin_solver.get_model()
             literals = [cnf.id_to_variable(id) for id in ids]
-            literals = list(filter(lambda x: x is Literal, literals))
-            return (True, )
+            return (True, literals)
         else:
             return (False, [])
 
-    def _solve_external(self, vcnf: CNF) -> Solution:
+    def _solve_external(self, cnf: CNF) -> Solution:
         args = self.external_solvers[self.__name] 
         if self.__args is not None:
             args += self.__args
         with NamedTemporaryFile(dir=".") as f:
-            vcnf.to_file(f.name)
+            cnf.to_file(f.name)
             p = Popen([self.__name, f.name, *args], stdout=PIPE, stderr=PIPE)
             out, _ = p.communicate()
         string = out.decode('utf-8').lower()
         if "unsat" in string:
             return (False, [])
         else:
-            literals = self._extract_int(string)
+            ids = self._extract_int(string)
+            literals = [cnf.id_to_variable(id) for id in ids]
             return (True, literals)
 
     @staticmethod
-    def _make_model(solution : Solution, vcnf: vcnf):
+    def _make_model(solution: Solution):
         sat, literals = solution
         model_dict = {
             "sat" : sat
         }
         if(sat):
             for literal in literals:
-                if literal > 0:
-                    _, name = vcnf.obj(literal)
+                name = literal.name()
+                if literal:
                     model_dict[name] = True
-                elif literal < 0:
-                    _, name = vcnf.obj(-literal)
+                else:
                     model_dict[name] = False
         return model_dict
 
