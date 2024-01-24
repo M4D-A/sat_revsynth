@@ -24,13 +24,16 @@ class Literal:
         return f"{self.__name}: {self.__bool__()} ({self.__value})"
 
     def value(self) -> int:
-        return abs(self.__value)
+        return self.__value
     
     def name(self) -> str:
         return self.__name
 
     def __eq__(self, other) -> bool:
         return (self.name(), self.value()) == (other.name(), other.value())
+
+    def __abs__(self):
+        return Literal(self.__name, abs(self.__value))
 
 
 class CNF():
@@ -60,13 +63,16 @@ class CNF():
     def check_name(self, name: VariableName) -> bool:
         return name in self._v_pool.obj2id.keys()
 
+    def check_id(self, id: int) -> bool:
+        return abs(id) in self._v_pool.obj2id.values()
+
     def verify_literals(self, literals: list[Literal]) -> bool:
         for lit in literals:
             name = lit.name()
             if not self.check_name(name):
                 return False
-            found = self.name_to_variable(name)
-            if found is None or not (lit == found):
+            found = self.name_to_literal(name)
+            if found is None or not (abs(lit) == abs(found)):
                 return False
         return True
 
@@ -79,27 +85,35 @@ class CNF():
         id = self._v_pool.id(name)
         return Literal(name, id)
 
-    def name_to_variable(self, name: VariableName) -> Literal:
+    def name_to_literal(self, name: VariableName) -> Literal:
         assert name in self._v_pool.obj2id.keys(), "Name not found in the pool"
         id = self._v_pool.id(name)
         return Literal(name, id)
 
-    def id_to_variable(self, id: int) -> Literal:
-        assert id in self._v_pool.obj2id.values(), "ID not found in the pool"
-        name = str(self._v_pool.obj(id))
+    def id_to_literal(self, id: int) -> Literal:
+        abs_id = abs(id)
+        assert abs_id in self._v_pool.obj2id.values(), "ID not found in the pool"
+        name = str(self._v_pool.obj(abs_id))
         return Literal(name, id)
 
-    def set_literal(self, literal: Literal) -> None:
+    def set_literal(self, literal: Literal):
         assert self.verify_literals([literal])
-        lval_a = literal.value()
-        self._cnf.append([lval_a])
+        lval = literal.value()
+        self._cnf.append([lval])
+        return self
 
-    def equals(self, literal_a: Literal, literal_b: Literal) -> None:
+    def set_literals(self, literals: list[Literal]):
+        for lit in literals:
+            self.set_literal(lit)
+        return self
+
+    def equals(self, literal_a: Literal, literal_b: Literal):
         assert self.verify_literals([literal_a, literal_b])
         lval_a = literal_a.value()
         lval_b = literal_b.value()
         self._cnf.append([-lval_a, lval_b])
         self._cnf.append([lval_a, -lval_b])
+        return self
     
     def equals_and(self, literal_a: Literal, literals_b: list[Literal]):
         assert self.verify_literals([literal_a] + literals_b)
@@ -115,10 +129,11 @@ class CNF():
         else:
             _ = [b_elem.value() for b_elem in literals_b]
             slice = literals_b[:clause_len-1]
-            aux_literal = self.reserve_name(f"A{self._v_counter}")
+            aux_literal = self.reserve_name(f"A{self._v_counter}", True)
             self._v_counter += 1
             self.equals_and(aux_literal, slice)
             self.equals_and(literal_a, [aux_literal] + literals_b[clause_len-1:])
+        return self
 
     def equals_or(self, literal_a: Literal, literals_b: list[Literal]):
         assert self.verify_literals([literal_a] + literals_b)
@@ -134,10 +149,11 @@ class CNF():
         else:
             _ = [b_elem.value() for b_elem in literals_b]
             slice = literals_b[:clause_len-1]
-            aux_literal = self.reserve_name(f"A{self._v_counter}")
+            aux_literal = self.reserve_name(f"A{self._v_counter}", True)
             self._v_counter += 1
             self.equals_or(aux_literal, slice)
             self.equals_or(literal_a, [aux_literal] + literals_b[clause_len-1:])
+        return self
 
     def xor(self, literals: list[Literal]):
         assert self.verify_literals(literals)
@@ -153,38 +169,44 @@ class CNF():
         else:
             _ = [a_elem.value() for a_elem in literals]
             slice = literals[:clause_len-1]
-            aux_literal = self.reserve_name(f"A{self._v_counter}")
+            aux_literal = self.reserve_name(f"A{self._v_counter}", True)
             self._v_counter += 1
             self.xor([aux_literal] + slice)
             self.xor([aux_literal] + literals[clause_len-1:])
+        return self
 
     def atleast(self, literals: list[Literal], lower_bound: int):
         assert self.verify_literals(literals)
         ids = [lit.value() for lit in literals]
         clauses = CardEnc.atleast(ids, lower_bound, encoding=self._caridnality_encoding, vpool = self._v_pool)
         self._cnf.extend(clauses)
+        return self
 
     def atmost(self, literals: list[Literal], upper_bound: int):
         assert self.verify_literals(literals)
         ids = [lit.value() for lit in literals]
-        clauses = CardEnc.atleast(ids, upper_bound, encoding=self._caridnality_encoding, vpool = self._v_pool)
+        clauses = CardEnc.atmost(ids, upper_bound, encoding=self._caridnality_encoding, vpool = self._v_pool)
         self._cnf.extend(clauses)
+        return self
 
     def exactly(self, literals: list[Literal], upper_bound: int):
         assert self.verify_literals(literals)
         ids = [lit.value() for lit in literals]
         clauses = CardEnc.equals(ids, upper_bound, encoding=self._caridnality_encoding, vpool = self._v_pool)
         self._cnf.extend(clauses)
+        return self
         
-    def nand(self, literal_a: Literal, literal_b: Literal) -> None:
+    def nand(self, literal_a: Literal, literal_b: Literal):
         assert self.verify_literals([literal_a, literal_b])
         lval_a = literal_a.value()
         lval_b = literal_b.value()
         self._cnf.append([-lval_a, -lval_b])
+        return self
 
     def exclude(self, literals: list[Literal]):
-        aux_literal = self.reserve_name(f"A{self._v_counter}")
+        aux_literal = self.reserve_name(f"A{self._v_counter}", True)
         self._v_counter += 1
         self.equals_and(aux_literal, literals)
         self.set_literal(-aux_literal)
+        return self
 
