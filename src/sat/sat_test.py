@@ -7,7 +7,7 @@ from .cnf import CNF
 from .solver import Solver
 
 
-solver_names = Solver.available_solvers
+solver_names = Solver.builtin_solvers.keys()
 solvers = [Solver(solver_name) for solver_name in solver_names]
 max_variables = 16
 short_max_variables = 6
@@ -147,7 +147,7 @@ def test_or_unsat(triplet_cnf, solver):
     assert not model['sat']
 
 
-@pytest.mark.parametrize("solver", [s for s in solvers])
+@pytest.mark.parametrize("solver", [s for s in solvers for _ in epochs])
 def test_or_true_long(long_cnf, solver):
     cnf, primary, literals = long_cnf
     cnf.equals_or(primary, literals).set_literal(primary)
