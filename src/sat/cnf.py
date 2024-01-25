@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from pysat.formula import CNF as CNF_core, IDPool
 from pysat.card import CardEnc
 from itertools import product
@@ -37,7 +38,7 @@ class Literal:
 
 
 class CNF():
-    def __init__(self, max_clause_len: int|None = None, cardinality_encoding: int = 1):
+    def __init__(self, max_clause_len: int|None = 3, cardinality_encoding: int = 1):
         assert max_clause_len is None or max_clause_len >= 3, "max_clause_len must be greater than 2"
         self._cnf = CNF_core()
         self._v_pool = IDPool(start_from = 1)
@@ -47,8 +48,8 @@ class CNF():
         
     def __str__(self) -> str:
         clauses = self.clauses()
-        string = "\n".join([str(clause) for clause in clauses]) + "\n\n"
-        string += "\n".join([f"{name}: {value}" for name, value in self._v_pool.obj2id.items()]) + "\n"
+        string = "clauses:\n" + "\n".join([str(clause) for clause in clauses]) + "\n\n"
+        string += "literals:\n" + "\n".join([f"{name}: {value}" for name, value in self._v_pool.obj2id.items()]) + "\n"
         return string
 
     def clauses(self) -> list[list]:
@@ -84,6 +85,9 @@ class CNF():
         assert name not in self._v_pool.obj2id, "Name already registered"
         id = self._v_pool.id(name)
         return Literal(name, id)
+
+    def reserve_names(self, names: Iterable[str], internal: bool = False) -> list[Literal]:
+        return [self.reserve_name(name, internal) for name in names]
 
     def name_to_literal(self, name: VariableName) -> Literal:
         assert name in self._v_pool.obj2id.keys(), "Name not found in the pool"

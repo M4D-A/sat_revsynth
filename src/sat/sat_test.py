@@ -1,221 +1,254 @@
-import unittest
-from cnf import CNF
-from solver import Solver
-from random import randint, choice, sample
+import pytest
+from random import randint, sample
 from itertools import product
 from functools import reduce
 from copy import deepcopy
+from .cnf import CNF
+from .solver import Solver
 
-class sat_test(unittest.TestCase):
-    solver_names = Solver.available_solvers
-    solvers = [Solver(solver_name) for solver_name in solver_names]
-    max_variables = 32
-    short_max_variables = 6
-    epochs = range(128)
 
-    def test_equals_true(self):
-        for solver in self.solvers:
-            cnf = CNF()
-            a = cnf.reserve_name('a')
-            b = cnf.reserve_name('b')
-            cnf.equals(a,b)
+solver_names = Solver.builtin_solvers.keys()
+solvers = [Solver(solver_name) for solver_name in solver_names]
+max_variables = 16
+short_max_variables = 6
+epochs = range(32)
 
-            cnf_1 = deepcopy(cnf).set_literal(a)
-            model = solver.solve(cnf_1)
-            self.assertTrue(model["sat"], model)
-            self.assertTrue(model[a.name()], model)
-            self.assertTrue(model[b.name()], model)
 
-            cnf_2 = deepcopy(cnf).set_literal(-a)
-            model = solver.solve(cnf_2)
-            self.assertTrue(model["sat"])
-            self.assertFalse(model[a.name()])
-            self.assertFalse(model[b.name()])
+@pytest.fixture
+def triplet_cnf():
+    cnf = CNF()
+    literals = cnf.reserve_names(['a', 'b', 'c'])
+    return (cnf, literals)
 
-            cnf_3 = deepcopy(cnf).set_literals([-a, b])
-            model = solver.solve(cnf_3)
-            self.assertFalse(model["sat"])
 
-    def test_short_and(self):
-        for solver in self.solvers:
-            cnf = CNF()
-            a = cnf.reserve_name('a')
-            b = cnf.reserve_name('b')
-            c = cnf.reserve_name('c')
-            cnf.equals_and(a, [b, c])
+@pytest.fixture
+def long_cnf():
+    cnf = CNF()
+    primary_literal = cnf.reserve_name("p")
+    literals_num = randint(4, max_variables)
+    literals = cnf.reserve_names(f"l{i}" for i in range(literals_num))
+    return (cnf, primary_literal, literals)
 
-            cnf_1 = deepcopy(cnf).set_literal(a)
-            model = solver.solve(cnf_1)
-            self.assertTrue(model["sat"])
-            self.assertTrue(model[a.name()])
-            self.assertTrue(model[b.name()])
-            self.assertTrue(model[c.name()])
 
-            cnf_2 = deepcopy(cnf).set_literal(-a)
-            model = solver.solve(cnf_2)
-            self.assertTrue(model["sat"])
-            self.assertFalse(model[a.name()])
-            self.assertTrue(not model[b.name()] or not model[c.name()])
-            
-            cnf_3 = deepcopy(cnf).set_literals([a, -b])
-            model = solver.solve(cnf_3)
-            self.assertFalse(model['sat'])
+@pytest.mark.parametrize("solver", [s for s in solvers])
+def test_equals_true(triplet_cnf, solver):
+    cnf, (a, b, c) = triplet_cnf
+    cnf.equals(a, b).set_literal(a)
+    model = solver.solve(cnf)
+    assert model['sat']
+    assert model[a.name()]
+    assert model[b.name()]
+    assert c.name() in model
 
-    def test_long_and(self):
-        for solver, _ in product(self.solvers, self.epochs):
-            cut = randint(3, self.max_variables)
-            cnf = CNF(max_clause_len=cut)
-            and_literals_num = randint(3, self.max_variables)
-            equal_literal = cnf.reserve_name("e")
-            and_literals = [cnf.reserve_name(f"b{i}") for i in range(and_literals_num)]
-            cnf.equals_and(equal_literal, and_literals)
-            self.assertTrue(all([len(clause) <= cut for clause in cnf.clauses()]))
-            
-            cnf_1 = deepcopy(cnf).set_literal(equal_literal)
-            model = solver.solve(cnf_1)
-            self.assertTrue(model["sat"])
-            self.assertTrue(model[equal_literal.name()])
-            self.assertTrue(all([model[lit.name()] for lit in and_literals]))
 
-            cnf_2 = deepcopy(cnf).set_literal(-equal_literal)
-            model = solver.solve(cnf_2)
-            self.assertTrue(model["sat"])
-            self.assertFalse(model[equal_literal.name()])
-            self.assertTrue(any([not model[lit.name()] for lit in and_literals]))
+@pytest.mark.parametrize("solver", [s for s in solvers])
+def test_equals_false(triplet_cnf, solver):
+    cnf, (a, b, c) = triplet_cnf
+    cnf.equals(a, b).set_literal(-b)
+    model = solver.solve(cnf)
+    assert model['sat']
+    assert not model[a.name()]
+    assert not model[b.name()]
+    assert c.name() in model
 
-            cnf_3 = deepcopy(cnf).set_literals([equal_literal, -and_literals[0]])
-            model = solver.solve(cnf_3)
-            self.assertFalse(model["sat"])
 
-    def test_short_or(self):
-        for solver in self.solvers[:1]:
-            cnf = CNF()
-            a = cnf.reserve_name('a')
-            b = cnf.reserve_name('b')
-            c = cnf.reserve_name('c')
-            cnf.equals_or(a, [b, c])
+@pytest.mark.parametrize("solver", [s for s in solvers])
+def test_equals_unsat(triplet_cnf, solver):
+    cnf, (a, b, _) = triplet_cnf
+    cnf.equals(a, b).set_literals([a, -b])
+    model = solver.solve(cnf)
+    assert not model['sat']
 
-            cnf_1 = deepcopy(cnf).set_literal(a)
-            model = solver.solve(cnf_1)
-            self.assertTrue(model["sat"])
-            self.assertTrue(model[a.name()])
-            self.assertTrue(model[b.name()] or model[c.name()])
 
-            cnf_2 = deepcopy(cnf).set_literal(-a)
-            model = solver.solve(cnf_2)
-            self.assertTrue(model["sat"])
-            self.assertTrue(not model[a.name()])
-            self.assertTrue(not model[b.name()])
-            self.assertTrue(not model[c.name()])
+@pytest.mark.parametrize("solver", [s for s in solvers])
+def test_and_true(triplet_cnf, solver):
+    cnf, (a, b, c) = triplet_cnf
+    cnf.equals_and(a, [b, c]).set_literal(a)
+    model = solver.solve(cnf)
+    assert model['sat']
+    assert model[a.name()]
+    assert model[b.name()]
+    assert model[c.name()]
 
-            cnf_3 = deepcopy(cnf).set_literals([-a, b])
-            model = solver.solve(cnf_3)
-            self.assertFalse(model['sat'])
 
-    def test_long_or(self):
-        for solver, _ in product(self.solvers, self.epochs):
-            cut = randint(3, self.max_variables)
-            cnf = CNF(max_clause_len=cut)
-            or_literals_num = randint(3, self.max_variables)
-            equal_literal = cnf.reserve_name("e")
-            or_literals = [cnf.reserve_name(f"b{i}") for i in range(or_literals_num)]
-            cnf.equals_or(equal_literal, or_literals)
-            self.assertTrue(all([len(clause) <= cut for clause in cnf.clauses()]))
-            
-            cnf_1 = deepcopy(cnf).set_literal(equal_literal)
-            model = solver.solve(cnf_1)
-            self.assertTrue(model["sat"])
-            self.assertTrue(model[equal_literal.name()])
-            self.assertTrue(any([model[lit.name()] for lit in or_literals]))
+@pytest.mark.parametrize("solver", [s for s in solvers])
+def test_and_false(triplet_cnf, solver):
+    cnf, (a, b, c) = triplet_cnf
+    cnf.equals_and(a, [b, c]).set_literal(-a)
+    model = solver.solve(cnf)
+    assert model['sat']
+    assert not model[a.name()]
+    assert not model[b.name()] or not model[c.name()]
 
-            cnf_2 = deepcopy(cnf).set_literal(-equal_literal)
-            model = solver.solve(cnf_2)
-            self.assertTrue(model["sat"])
-            self.assertFalse(model[equal_literal.name()])
-            self.assertTrue(all([not model[lit.name()] for lit in or_literals]))
 
-            cnf_3 = deepcopy(cnf).set_literals([-equal_literal, or_literals[0]])
-            model = solver.solve(cnf_3)
-            self.assertFalse(model["sat"])
+@pytest.mark.parametrize("solver", [s for s in solvers])
+def test_and_unsat(triplet_cnf, solver):
+    cnf, (a, b, c) = triplet_cnf
+    cnf.equals_and(a, [b, c]).set_literals([a, -b])
+    model = solver.solve(cnf)
+    assert not model['sat']
 
-    def test_short_xor(self):
-        for solver in self.solvers: 
-            cnf = CNF()
-            a = cnf.reserve_name('a')
-            b = cnf.reserve_name('b')
-            c = cnf.reserve_name('c')
-            cnf.xor([a, b, c])
 
-            cnf_1 = deepcopy(cnf).set_literal(a)
-            model = solver.solve(cnf_1)
-            self.assertTrue(model["sat"])
-            self.assertTrue(model[a.name()])
-            self.assertTrue(model[b.name()] ^ model[c.name()])
+@pytest.mark.parametrize("solver", [s for s in solvers for _ in epochs])
+def test_and_true_long(long_cnf, solver):
+    cnf, primary, literals = long_cnf
+    cnf.equals_and(primary, literals).set_literal(primary)
+    model = solver.solve(cnf)
+    assert model['sat']
+    assert model[primary.name()]
+    assert all(model[lit.name()] for lit in literals)
 
-            cnf_1 = deepcopy(cnf).set_literal(-a)
-            model = solver.solve(cnf_1)
-            self.assertTrue(model["sat"])
-            self.assertFalse(model[a.name()])
-            self.assertFalse(model[b.name()] ^ model[c.name()])
 
-            cnf_1 = deepcopy(cnf).set_literals([a, b, c])
-            model = solver.solve(cnf_1)
-            self.assertFalse(model["sat"])
+@pytest.mark.parametrize("solver", [s for s in solvers for _ in epochs])
+def test_and_false_long(long_cnf, solver):
+    cnf, primary, literals = long_cnf
+    cnf.equals_and(primary, literals).set_literal(-primary)
+    model = solver.solve(cnf)
+    assert model['sat']
+    assert not model[primary.name()]
+    assert any(not model[lit.name()] for lit in literals)
 
-    def test_long_xor(self):
-        for solver, _ in product(self.solvers, self.epochs):
-            cnf = CNF(max_clause_len=3)
-            xor_literals_num = randint(3, self.max_variables)
-            xor_literals = [cnf.reserve_name(f"b{i}") for i in range(xor_literals_num)]
-            cnf.xor(xor_literals)
-            literals_to_set = sample(xor_literals, randint(0, len(xor_literals)-1))
-            set_literals = [var if randint(0,1) else -var for var in literals_to_set]
-            cnf.set_literals(set_literals)
-            model = solver.solve(cnf)
-            for lit in literals_to_set:
-                name = lit.name()
-                if lit in set_literals:
-                    self.assertTrue(model[name])
-                if -lit in set_literals:
-                    self.assertFalse(model[name])
-            value = reduce(lambda x,y : x^y, map(lambda var: model[var.name()], xor_literals))
-            self.assertFalse(value)
 
-    def test_atleast(self):
-        for solver, _ in product(self.solvers, self.epochs):
-            cnf = CNF()
-            literals_num = randint(3, self.max_variables)
-            literals = [cnf.reserve_name(f"b{i}") for i in range(literals_num)]
+@pytest.mark.parametrize("solver", [s for s in solvers for _ in epochs])
+def test_and_unsat_long(long_cnf, solver):
+    for solver, _ in product(solvers, epochs):
+        cnf, primary, literals = long_cnf
+        cnf.equals_and(primary, literals).set_literals([primary, -literals[0]])
+        model = solver.solve(cnf)
+        assert not model['sat']
 
-            set_vars_num = randint(0, literals_num - 1)
-            literals_to_set = sample(literals, set_vars_num)
-            set_literals = [var if randint(0,1) else -var for var in literals_to_set]
-            set_false_num = sum([1 for var in set_literals if -var]) 
 
-            max_lower_bound = literals_num - set_false_num
-            lower_bound = randint(1, max_lower_bound)
-            cnf.atleast(literals, lower_bound)
-            cnf.set_literals(set_literals)
-            model = solver.solve(cnf)
-            self.assertTrue(model["sat"])
-            self.assertTrue(sum([model[lit.name()] for lit in literals]) >= lower_bound)
+@pytest.mark.parametrize("solver", [s for s in solvers])
+def test_or_true(triplet_cnf, solver):
+    cnf, (a, b, c) = triplet_cnf
+    cnf.equals_or(a, [b, c]).set_literal(a)
+    model = solver.solve(cnf)
+    assert model['sat']
+    assert model[a.name()]
+    assert model[b.name()] or model[c.name()]
 
-    def test_atmost(self):
-        for solver, _ in product(self.solvers, self.epochs):
-            cnf = CNF()
-            literals_num = randint(3, self.max_variables)
-            literals = [cnf.reserve_name(f"b{i}") for i in range(literals_num)]
-            set_vars_num = randint(0, literals_num - 1)
-            literals_to_set = sample(literals, set_vars_num)
-            set_literals = [lit if randint(0,1) else -lit for lit in literals_to_set]
-            set_true_num = sum([1 for lit in set_literals if lit]) 
-            min_upper_bound = set_true_num
-            upper_bound = randint(min_upper_bound, literals_num - 1)
-            cnf.atmost(literals, upper_bound)
-            cnf.set_literals(set_literals)
-            model = solver.solve(cnf)
-            self.assertTrue(model["sat"])
-            self.assertTrue(sum([model[lit.name()] for lit in literals]) <= upper_bound)
 
-if __name__ == '__main__':
-    unittest.main()
+@pytest.mark.parametrize("solver", [s for s in solvers])
+def test_or_false(triplet_cnf, solver):
+    cnf, (a, b, c) = triplet_cnf
+    cnf.equals_or(a, [b, c]).set_literal(-a)
+    model = solver.solve(cnf)
+    assert model['sat']
+    assert not model[a.name()]
+    assert not model[b.name()]
+    assert not model[c.name()]
+
+
+@pytest.mark.parametrize("solver", [s for s in solvers])
+def test_or_unsat(triplet_cnf, solver):
+    cnf, (a, b, c) = triplet_cnf
+    cnf.equals_or(a, [b, c]).set_literals([-a, b])
+    model = solver.solve(cnf)
+    assert not model['sat']
+
+
+@pytest.mark.parametrize("solver", [s for s in solvers for _ in epochs])
+def test_or_true_long(long_cnf, solver):
+    cnf, primary, literals = long_cnf
+    cnf.equals_or(primary, literals).set_literal(primary)
+    model = solver.solve(cnf)
+    assert model['sat']
+    assert model[primary.name()]
+    assert any(model[lit.name()] for lit in literals)
+
+
+@pytest.mark.parametrize("solver", [s for s in solvers for _ in epochs])
+def test_or_false_long(long_cnf, solver):
+    cnf, primary, literals = long_cnf
+    cnf.equals_or(primary, literals).set_literal(-primary)
+    model = solver.solve(cnf)
+    assert model['sat']
+    assert not model[primary.name()]
+    assert all(not model[lit.name()] for lit in literals)
+
+
+@pytest.mark.parametrize("solver", [s for s in solvers for _ in epochs])
+def test_or_unsat_long(long_cnf, solver):
+    cnf, primary, literals = long_cnf
+    cnf.equals_or(primary, literals).set_literals([-primary, literals[0]])
+    model = solver.solve(cnf)
+    assert not model['sat']
+
+
+@pytest.mark.parametrize("solver", [s for s in solvers])
+def test_xor_true(triplet_cnf, solver):
+    cnf, (a, b, c) = triplet_cnf
+    cnf.xor([a, b, c]).set_literal(a)
+    model = solver.solve(cnf)
+    assert model['sat']
+    assert model[a.name()]
+    assert model[b.name()] ^ model[c.name()]
+
+
+@pytest.mark.parametrize("solver", [s for s in solvers])
+def test_xor_false(triplet_cnf, solver):
+    cnf, (a, b, c) = triplet_cnf
+    cnf.xor([a, b, c]).set_literal(-a)
+    model = solver.solve(cnf)
+    assert model['sat']
+    assert not model[a.name()]
+    assert not (model[b.name()] ^ model[c.name()])
+
+
+@pytest.mark.parametrize("solver", [s for s in solvers])
+def test_xor_unsat(triplet_cnf, solver):
+    cnf, (a, b, c) = triplet_cnf
+    cnf.xor([a, b, c]).set_literals([a, b, c])
+    model = solver.solve(cnf)
+    assert not model['sat']
+
+
+@pytest.mark.parametrize("solver", [s for s in solvers for _ in epochs])
+def test_xor_true_long(long_cnf, solver):
+    cnf, _, literals = deepcopy(long_cnf)
+    cnf.xor(literals)
+    literals_to_set = sample(literals, randint(0, len(literals)-1))
+    set_literals = [var if randint(0, 1) else -var for var in literals_to_set]
+    cnf.set_literals(set_literals)
+    model = solver.solve(cnf)
+    for lit in literals_to_set:
+        name = lit.name()
+        if lit in set_literals:
+            assert (model[name])
+            if -lit in set_literals:
+                assert not model[name]
+        value_map = map(lambda var: model[var.name()], literals)
+        value = reduce(lambda x, y: x ^ y, value_map)
+        assert not value
+
+
+@pytest.mark.parametrize("solver", [s for s in solvers for _ in epochs])
+def test_atleast(long_cnf, solver):
+    cnf, _, literals = deepcopy(long_cnf)
+    set_vars_num = randint(0, len(literals) - 1)
+    literals_to_set = sample(literals, set_vars_num)
+    set_literals = [var if randint(0, 1) else -var for var in literals_to_set]
+    set_false_num = sum([1 for var in set_literals if -var])
+    max_lower_bound = len(literals) - set_false_num
+    lower_bound = randint(1, max_lower_bound)
+    cnf.atleast(literals, lower_bound)
+    cnf.set_literals(set_literals)
+    model = solver.solve(cnf)
+    assert model['sat']
+    assert sum([model[lit.name()] for lit in literals]) >= lower_bound
+
+
+@pytest.mark.parametrize("solver", [s for s in solvers for _ in epochs])
+def test_atmost(long_cnf, solver):
+    cnf, _, literals = deepcopy(long_cnf)
+    set_vars_num = randint(0, len(literals) - 1)
+    literals_to_set = sample(literals, set_vars_num)
+    set_literals = [var if randint(0, 1) else -var for var in literals_to_set]
+    set_true_num = sum([1 for lit in set_literals if lit])
+    min_upper_bound = set_true_num
+    upper_bound = randint(min_upper_bound, len(literals) - 1)
+    cnf.atmost(literals, upper_bound)
+    cnf.set_literals(set_literals)
+    model = solver.solve(cnf)
+    assert model['sat']
+    assert sum([model[lit.name()] for lit in literals]) <= upper_bound

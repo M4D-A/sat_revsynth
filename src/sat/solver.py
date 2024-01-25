@@ -62,19 +62,13 @@ class Solver:
 
     @staticmethod
     def _make_model(solution: Solution, cnf: CNF):
-        sat, ids = solution
+        sat, solution_ints = solution
         if not sat:
             return {"sat": False}
-
-        model_dict = {
-            "sat" : sat
-        }
-        for id in ids:
-            if cnf.check_id(id): 
-                literal = cnf.id_to_literal(id)
-                name = literal.name()
-                model_dict[name] = bool(literal)
-        return model_dict
+        all_literals = cnf.v_pool().obj2id.items()
+        model = {name: -id not in solution_ints for name, id in all_literals}
+        model["sat"] = True
+        return model
 
     @staticmethod
     def _extract_ints(string: str) -> list[int]:
