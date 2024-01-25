@@ -30,7 +30,7 @@ def long_cnf():
     return (cnf, primary_literal, literals)
 
 
-@pytest.mark.parametrize("solver", [solver for solver in solvers])
+@pytest.mark.parametrize("solver", [s for s in solvers])
 def test_equals_true(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.equals(a, b).set_literal(a)
@@ -41,7 +41,7 @@ def test_equals_true(triplet_cnf, solver):
     assert c.name() in model
 
 
-@pytest.mark.parametrize("solver", [solver for solver in solvers])
+@pytest.mark.parametrize("solver", [s for s in solvers])
 def test_equals_false(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.equals(a, b).set_literal(-b)
@@ -52,7 +52,7 @@ def test_equals_false(triplet_cnf, solver):
     assert c.name() in model
 
 
-@pytest.mark.parametrize("solver", [solver for solver in solvers])
+@pytest.mark.parametrize("solver", [s for s in solvers])
 def test_equals_unsat(triplet_cnf, solver):
     cnf, (a, b, _) = triplet_cnf
     cnf.equals(a, b).set_literals([a, -b])
@@ -60,7 +60,7 @@ def test_equals_unsat(triplet_cnf, solver):
     assert not model['sat']
 
 
-@pytest.mark.parametrize("solver", [solver for solver in solvers])
+@pytest.mark.parametrize("solver", [s for s in solvers])
 def test_and_true(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.equals_and(a, [b, c]).set_literal(a)
@@ -71,7 +71,7 @@ def test_and_true(triplet_cnf, solver):
     assert model[c.name()]
 
 
-@pytest.mark.parametrize("solver", [solver for solver in solvers])
+@pytest.mark.parametrize("solver", [s for s in solvers])
 def test_and_false(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.equals_and(a, [b, c]).set_literal(-a)
@@ -81,7 +81,7 @@ def test_and_false(triplet_cnf, solver):
     assert not model[b.name()] or not model[c.name()]
 
 
-@pytest.mark.parametrize("solver", [solver for solver in solvers])
+@pytest.mark.parametrize("solver", [s for s in solvers])
 def test_and_unsat(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.equals_and(a, [b, c]).set_literals([a, -b])
@@ -118,7 +118,7 @@ def test_and_unsat_long(long_cnf, solver):
         assert not model['sat']
 
 
-@pytest.mark.parametrize("solver", [solver for solver in solvers])
+@pytest.mark.parametrize("solver", [s for s in solvers])
 def test_or_true(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.equals_or(a, [b, c]).set_literal(a)
@@ -128,7 +128,7 @@ def test_or_true(triplet_cnf, solver):
     assert model[b.name()] or model[c.name()]
 
 
-@pytest.mark.parametrize("solver", [solver for solver in solvers])
+@pytest.mark.parametrize("solver", [s for s in solvers])
 def test_or_false(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.equals_or(a, [b, c]).set_literal(-a)
@@ -139,7 +139,7 @@ def test_or_false(triplet_cnf, solver):
     assert not model[c.name()]
 
 
-@pytest.mark.parametrize("solver", [solver for solver in solvers])
+@pytest.mark.parametrize("solver", [s for s in solvers])
 def test_or_unsat(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.equals_or(a, [b, c]).set_literals([-a, b])
@@ -147,7 +147,7 @@ def test_or_unsat(triplet_cnf, solver):
     assert not model['sat']
 
 
-@pytest.mark.parametrize("solver", [solver for solver in solvers])
+@pytest.mark.parametrize("solver", [s for s in solvers])
 def test_or_true_long(long_cnf, solver):
     cnf, primary, literals = long_cnf
     cnf.equals_or(primary, literals).set_literal(primary)
@@ -175,7 +175,7 @@ def test_or_unsat_long(long_cnf, solver):
     assert not model['sat']
 
 
-@pytest.mark.parametrize("solver", [solver for solver in solvers])
+@pytest.mark.parametrize("solver", [s for s in solvers])
 def test_xor_true(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.xor([a, b, c]).set_literal(a)
@@ -185,7 +185,7 @@ def test_xor_true(triplet_cnf, solver):
     assert model[b.name()] ^ model[c.name()]
 
 
-@pytest.mark.parametrize("solver", [solver for solver in solvers])
+@pytest.mark.parametrize("solver", [s for s in solvers])
 def test_xor_false(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.xor([a, b, c]).set_literal(-a)
@@ -195,7 +195,7 @@ def test_xor_false(triplet_cnf, solver):
     assert not (model[b.name()] ^ model[c.name()])
 
 
-@pytest.mark.parametrize("solver", [solver for solver in solvers])
+@pytest.mark.parametrize("solver", [s for s in solvers])
 def test_xor_unsat(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.xor([a, b, c]).set_literals([a, b, c])
