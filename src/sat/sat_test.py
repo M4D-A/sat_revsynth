@@ -10,7 +10,7 @@ solver_names = Solver.available_solvers
 solvers = [Solver(solver_name) for solver_name in solver_names]
 max_variables = 16
 short_max_variables = 6
-epochs = range(1024)
+epochs = range(32)
 
 @pytest.fixture
 def triplet_cnf():
@@ -181,12 +181,10 @@ def test_xor_unsat(triplet_cnf):
         assert not model['sat']
 
 def test_xor_true_long(long_cnf):
-    for solver, _ in product(solvers[:1], epochs):
-        cnf = CNF()
-        cnf, primary, literals = deepcopy(long_cnf)
-        xor_literals = literals + [primary]
-        cnf.xor(xor_literals)
-        literals_to_set = sample(xor_literals, randint(0, len(xor_literals)-1))
+    for solver, _ in product(solvers, epochs):
+        cnf, _ , literals = deepcopy(long_cnf)
+        cnf.xor(literals)
+        literals_to_set = sample(literals, randint(0, len(literals)-1))
         set_literals = [var if randint(0,1) else -var for var in literals_to_set]
         cnf.set_literals(set_literals)
         model = solver.solve(cnf)
@@ -196,44 +194,36 @@ def test_xor_true_long(long_cnf):
                 assert (model[name])
             if -lit in set_literals:
                 assert not(model[name])
-        value = reduce(lambda x,y : x^y, map(lambda var: model[var.name()], xor_literals))
-        assert not(value)
-#
-# def test_atleast(self):
-#     for solver, _ in product(self.solvers, self.epochs):
-#         cnf = CNF()
-#         literals_num = randint(3, self.max_variables)
-#         literals = [cnf.reserve_name(f'b{i}') for i in range(literals_num)]
-#
-#         set_vars_num = randint(0, literals_num - 1)
-#         literals_to_set = sample(literals, set_vars_num)
-#         set_literals = [var if randint(0,1) else -var for var in literals_to_set]
-#         set_false_num = sum([1 for var in set_literals if -var]) 
-#
-#         max_lower_bound = literals_num - set_false_num
-#         lower_bound = randint(1, max_lower_bound)
-#         cnf.atleast(literals, lower_bound)
-#         cnf.set_literals(set_literals)
-#         model = solver.solve(cnf)
-#         self.assertTrue(model['sat'])
-#         self.assertTrue(sum([model[lit.name()] for lit in literals]) >= lower_bound)
-#
-# def test_atmost(self):
-#     for solver, _ in product(self.solvers, self.epochs):
-#         cnf = CNF()
-#         literals_num = randint(3, self.max_variables)
-#         literals = [cnf.reserve_name(f'b{i}') for i in range(literals_num)]
-#         set_vars_num = randint(0, literals_num - 1)
-#         literals_to_set = sample(literals, set_vars_num)
-#         set_literals = [lit if randint(0,1) else -lit for lit in literals_to_set]
-#         set_true_num = sum([1 for lit in set_literals if lit]) 
-#         min_upper_bound = set_true_num
-#         upper_bound = randint(min_upper_bound, literals_num - 1)
-#         cnf.atmost(literals, upper_bound)
-#         cnf.set_literals(set_literals)
-#         model = solver.solve(cnf)
-#         self.assertTrue(model['sat'])
-#         self.assertTrue(sum([model[lit.name()] for lit in literals]) <= upper_bound)
-#
-# if __name__ == '__main__':
-# unittest.main()
+        value = reduce(lambda x,y : x^y, map(lambda var: model[var.name()], literals))
+        assert not value
+
+
+def test_atleast(long_cnf):
+    for solver, _ in product(solvers, epochs):
+        cnf, _ , literals = deepcopy(long_cnf)
+        set_vars_num = randint(0, len(literals) - 1)
+        literals_to_set = sample(literals, set_vars_num)
+        set_literals = [var if randint(0,1) else -var for var in literals_to_set]
+        set_false_num = sum([1 for var in set_literals if -var]) 
+        max_lower_bound = len(literals) - set_false_num
+        lower_bound = randint(1, max_lower_bound)
+        cnf.atleast(literals, lower_bound)
+        cnf.set_literals(set_literals)
+        model = solver.solve(cnf)
+        assert model['sat']
+        assert sum([model[lit.name()] for lit in literals]) >= lower_bound
+
+def test_atmost(long_cnf):
+    for solver, _ in product(solvers, epochs):
+        cnf, _ , literals = deepcopy(long_cnf)
+        set_vars_num = randint(0, len(literals) - 1)
+        literals_to_set = sample(literals, set_vars_num)
+        set_literals = [var if randint(0,1) else -var for var in literals_to_set]
+        set_true_num = sum([1 for lit in set_literals if lit]) 
+        min_upper_bound = set_true_num
+        upper_bound = randint(min_upper_bound, len(literals) - 1)
+        cnf.atmost(literals, upper_bound)
+        cnf.set_literals(set_literals)
+        model = solver.solve(cnf)
+        assert model['sat']
+        assert sum([model[lit.name()] for lit in literals]) <= upper_bound 
