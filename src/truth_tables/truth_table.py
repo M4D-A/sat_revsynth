@@ -1,7 +1,5 @@
 from collections.abc import Sequence, Iterable
 
-TT = list[list[int]]
-
 
 class TruthTable:
     def __init__(self, bits_num: int, values: Sequence[int] | None = None):
@@ -14,6 +12,11 @@ class TruthTable:
         self._values = list(values)
         self._bits = [[(i >> s) & 1 for s in range(bits_num)] for i in values]
 
+    def __eq__(self, other):
+        lhs = (self._bits_num, self._values, self._bits)
+        rhs = (other._bits_num, other._values, other._bits)
+        return lhs == rhs
+
     def __len__(self):
         return len(self._values)
 
@@ -24,6 +27,9 @@ class TruthTable:
 
     def values(self):
         return self._values
+
+    def bits_num(self):
+        return self._bits_num
 
     def nott(self, target: int, inplace: bool = True) -> "TruthTable":
         if inplace:
