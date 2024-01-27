@@ -1,6 +1,7 @@
 from collections.abc import Sequence, Iterable
 from random import shuffle
 
+
 class TruthTable:
     def __init__(self, bits_num: int, values: Sequence[int] | None = None):
         if values is None:
@@ -30,6 +31,9 @@ class TruthTable:
 
     def bits_num(self):
         return self._bits_num
+
+    def bits(self):
+        return self._bits
 
     def nott(self, target: int, inplace: bool = True) -> "TruthTable":
         if inplace:
@@ -70,13 +74,3 @@ class TruthTable:
         self._bits = new_bits
         self._values = new_values
         return self
-
-
-
-
-
-        
-
-
-
-
