@@ -1,6 +1,7 @@
 import pytest
 from random import randint, sample
 from .truth_table import TruthTable
+from copy import deepcopy
 
 
 max_tt_size = 8
@@ -10,8 +11,8 @@ size_randomizer = list(randint(3, max_tt_size) for _ in range(epochs))
 
 @pytest.mark.parametrize("tt_size", size_randomizer)
 def test_not_involutivity(tt_size):
-    ref_tt = TruthTable(tt_size)
-    tt = TruthTable(tt_size)
+    ref_tt = TruthTable(tt_size).shuffle()
+    tt = deepcopy(ref_tt)
     target = randint(0, tt.bits_num() - 1)
     tt.nott(target)
     tt.nott(target)
@@ -20,8 +21,8 @@ def test_not_involutivity(tt_size):
 
 @pytest.mark.parametrize("tt_size", size_randomizer)
 def test_cnot_involutivity(tt_size):
-    ref_tt = TruthTable(tt_size)
-    tt = TruthTable(tt_size)
+    ref_tt = TruthTable(tt_size).shuffle()
+    tt = deepcopy(ref_tt)
     control, target = sample(range(0, tt.bits_num() - 1), 2)
     tt.cnot(control, target)
     tt.cnot(control, target)
@@ -30,8 +31,8 @@ def test_cnot_involutivity(tt_size):
 
 @pytest.mark.parametrize("tt_size", size_randomizer)
 def test_mcnot_involutivity(tt_size):
-    ref_tt = TruthTable(tt_size)
-    tt = TruthTable(tt_size)
+    ref_tt = TruthTable(tt_size).shuffle()
+    tt = deepcopy(ref_tt)
     special_ids_num = randint(2, tt.bits_num() - 1)
     target, *controls = sample(range(0, tt.bits_num() - 1), special_ids_num)
     tt.mcnot(controls, target)

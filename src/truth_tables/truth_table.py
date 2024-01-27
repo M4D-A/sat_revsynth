@@ -1,5 +1,5 @@
 from collections.abc import Sequence, Iterable
-
+from random import shuffle
 
 class TruthTable:
     def __init__(self, bits_num: int, values: Sequence[int] | None = None):
@@ -61,3 +61,22 @@ class TruthTable:
         else:
             new_tt = TruthTable(self._bits_num)
             return new_tt.mcnot(controls, target, True)
+
+    def shuffle(self):
+        reordering = self.values().copy()
+        shuffle(reordering)
+        new_bits = [self._bits[i] for i in reordering]
+        new_values = [self._values[i] for i in reordering]
+        self._bits = new_bits
+        self._values = new_values
+        return self
+
+
+
+
+
+        
+
+
+
+
