@@ -32,7 +32,7 @@ def test_cnot_involutivity(tt_size):
 def test_mcnot_involutivity(tt_size):
     ref_tt = TruthTable(tt_size)
     tt = TruthTable(tt_size)
-    special_ids_num = randint(3, tt.bits_num())
+    special_ids_num = randint(2, tt.bits_num() - 1)
     target, *controls = sample(range(0, tt.bits_num() - 1), special_ids_num)
     tt.mcnot(controls, target)
     tt.mcnot(controls, target)
