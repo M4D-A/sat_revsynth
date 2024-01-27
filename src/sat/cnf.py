@@ -83,11 +83,11 @@ class CNF():
 
     def reserve_name(self, name: VarName, internal: bool = False) -> Literal:
         if internal:
-            assert name[0].isupper(
-            ), "Name cannot start with lowercase letter for internal variables"
+            assert name[0].isupper(), \
+                "Internal variable name cannot start with lowercase letter"
         else:
-            assert name[0].islower(
-            ), "Name cannot start with uppercase letter for regular variables"
+            assert name[0].islower(), \
+                "Regular variable name cannot start with uppercase letter"
         assert name not in self._v_pool.obj2id, "Name already registered"
         id = self._v_pool.id(name)
         return Literal(name, id)
@@ -145,12 +145,12 @@ class CNF():
                 self._cnf.append([-lval_a, lval_b])
         else:
             _ = [b_elem.value() for b_elem in literals_b]
-            slice = literals_b[:clause_len-1]
+            slice = literals_b[:clause_len - 1]
+            remainder = literals_b[clause_len - 1:]
             aux_literal = self.reserve_name(f"A{self._v_counter}", True)
             self._v_counter += 1
             self.equals_and(aux_literal, slice)
-            self.equals_and(
-                literal_a, [aux_literal] + literals_b[clause_len-1:])
+            self.equals_and(literal_a, [aux_literal] + remainder)
         return self
 
     def equals_or(self, literal_a: Literal, literals_b: list[Literal]):
@@ -168,12 +168,12 @@ class CNF():
                 self._cnf.append([lval_a, -lval_b])
         else:
             _ = [b_elem.value() for b_elem in literals_b]
-            slice = literals_b[:clause_len-1]
+            slice = literals_b[:clause_len - 1]
+            remainder = literals_b[clause_len - 1:]
             aux_literal = self.reserve_name(f"A{self._v_counter}", True)
             self._v_counter += 1
             self.equals_or(aux_literal, slice)
-            self.equals_or(literal_a, [aux_literal] +
-                           literals_b[clause_len-1:])
+            self.equals_or(literal_a, [aux_literal] + remainder)
         return self
 
     def xor(self, literals: list[Literal]):
@@ -187,14 +187,14 @@ class CNF():
             for prod in product(*ones):
                 if (sum(prod) - len(literals) + 2) % 4 == 0:
                     self._cnf.append(
-                        [one*a_id for one, a_id in zip(prod, ids)])
+                        [one * a_id for one, a_id in zip(prod, ids)])
         else:
             _ = [a_elem.value() for a_elem in literals]
-            slice = literals[:clause_len-1]
+            slice = literals[:clause_len - 1]
             aux_literal = self.reserve_name(f"A{self._v_counter}", True)
             self._v_counter += 1
             self.xor([aux_literal] + slice)
-            self.xor([aux_literal] + literals[clause_len-1:])
+            self.xor([aux_literal] + literals[clause_len - 1:])
         return self
 
     def atleast(self, literals: list[Literal], lower_bound: int):

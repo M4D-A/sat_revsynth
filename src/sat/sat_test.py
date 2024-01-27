@@ -207,7 +207,7 @@ def test_xor_unsat(triplet_cnf, solver):
 def test_xor_true_long(long_cnf, solver):
     cnf, _, literals = deepcopy(long_cnf)
     cnf.xor(literals)
-    literals_to_set = sample(literals, randint(0, len(literals)-1))
+    literals_to_set = sample(literals, randint(0, len(literals) - 1))
     set_literals = [var if randint(0, 1) else -var for var in literals_to_set]
     cnf.set_literals(set_literals)
     model = solver.solve(cnf)

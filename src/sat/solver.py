@@ -74,6 +74,7 @@ class Solver:
 
     @staticmethod
     def _extract_ints(string: str) -> list[int]:
-        ints = [int(s) for s in string.split() if s.isdigit()
-                or (s[0] == '-' and s[1:].isdigit())]
+        def is_int(s):
+            return s.isdigit() or (s[0] == '-' and s[1:].isdigit())
+        ints = [int(s) for s in string.split() if is_int(s)]
         return [i for i in ints if i != 0]
