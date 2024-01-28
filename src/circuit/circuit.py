@@ -28,9 +28,9 @@ class Circuit:
         controls, target = gate
         self.mcx(controls, target)
 
-    def is_swappable(self, index, ignore_identical: bool = True) -> bool:
+    def gate_swappable(self, index, ignore_identical: bool = True) -> bool:
         lhs = self._gates[index]
-        rhs = self._gates[index + 1]
+        rhs = self._gates[(index + 1) % len(self)]
         if ignore_identical and lhs == rhs:
             return False
         lhs_controls, lhs_target = lhs
@@ -39,11 +39,22 @@ class Circuit:
         rhs_collision = rhs_target in lhs_controls
         return not (lhs_collision) and not (rhs_collision)
 
+    def swappable_gates(self, ignore_identical: bool = True) -> list[int]:
+        indices = [i for i in range(len(self)) if self.gate_swappable(i, ignore_identical)]
+        return indices
+
     def __len__(self):
         return len(self._gates)
 
     def __eq__(self, other):
         return (self._width, self._tt, self._gates) == (other.width, other.tt, other.gates)
+
+    def __add__(self, other):
+        assert self._width == other._width
+        new_width = self._width
+        new_circuit = Circuit(new_width)
+        new_circuit._gates = self._gates + other._gates
+        new_circuit._tt = self._tt + other._tt
 
     def print(self):
         qc = QuantumCircuit(self._width)
