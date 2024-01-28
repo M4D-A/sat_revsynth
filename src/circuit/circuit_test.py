@@ -15,6 +15,8 @@ def test_x(circ_size):
     circ = deepcopy(ref_circ)
     target = randint(0, circ.width() - 1)
     circ.x(target)
+    assert len(circ) == 1
+    assert circ.gates()[0] == [[], target]
     for ref_row, row in zip(ref_circ.tt().bits(), circ.tt().bits()):
         for i, (ref_b, b) in enumerate(zip(ref_row, row)):
             if i == target:
@@ -29,6 +31,8 @@ def test_cx(circ_size):
     circ = deepcopy(ref_circ)
     control, target = sample(range(0, circ_size - 1), 2)
     circ.cx(control, target)
+    assert len(circ) == 1
+    assert circ.gates()[0] == [[control], target]
     for ref_row, row in zip(ref_circ.tt().bits(), circ.tt().bits()):
         for i, (ref_b, b) in enumerate(zip(ref_row, row)):
             if i == target and row[control] == 1:
@@ -44,6 +48,8 @@ def test_mcx(circ_size):
     special_ids_num = randint(2, circ_size - 1)
     target, *controls = sample(range(0, circ_size - 1), special_ids_num)
     circ.mcx(controls, target)
+    assert len(circ) == 1
+    assert circ.gates()[0] == [controls, target]
     for ref_row, row in zip(ref_circ.tt().bits(), circ.tt().bits()):
         for i, (ref_b, b) in enumerate(zip(ref_row, row)):
             if i == target and all(row[c] for c in controls):

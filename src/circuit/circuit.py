@@ -55,6 +55,9 @@ class Circuit:
     def tt(self):
         return self._tt
 
+    def gates(self):
+        return self._gates
+
     def __len__(self):
         return len(self._gates)
 
