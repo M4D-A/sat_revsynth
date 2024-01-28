@@ -1,5 +1,4 @@
-from ..truth_tables import TruthTable
-from qiskit import QuantumCircuit
+from truth_tables import TruthTable
 
 Gate = tuple[list[int], int]  # Gate in integer representation
 
@@ -43,6 +42,12 @@ class Circuit:
         indices = [i for i in range(len(self)) if self.gate_swappable(i, ignore_identical)]
         return indices
 
+    def width(self):
+        return self._width
+
+    def tt(self):
+        return self._tt
+
     def __len__(self):
         return len(self._gates)
 
@@ -55,13 +60,3 @@ class Circuit:
         new_circuit = Circuit(new_width)
         new_circuit._gates = self._gates + other._gates
         new_circuit._tt = self._tt + other._tt
-
-    def print(self):
-        qc = QuantumCircuit(self._width)
-        for controls, target in self._gates:
-            if len(controls) == 0:
-                qc.x(target)
-            else:
-                qc.mcx(controls, target)
-            qc.barrier()
-        print(qc.draw(justify="none", plot_barriers=False))
