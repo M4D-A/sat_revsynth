@@ -6,37 +6,48 @@ Gate = tuple[list[int], int]  # Gate in integer representation
 
 class Circuit:
     def __init__(self, bits_num: int):
-        self.width = bits_num
-        self.tt = TruthTable(bits_num)
-        self.gates: list[Gate] = []
+        self._width = bits_num
+        self._tt = TruthTable(bits_num)
+        self._gates: list[Gate] = []
 
     def x(self, target: int):
-        assert 0 <= target and target < self.width
-        self.gates.append(([], target))
-        self.tt.nott(target)
+        assert 0 <= target and target < self._width
+        self._gates.append(([], target))
+        self._tt.nott(target)
         return self
 
     def mcx(self, controls: list[int], target: int):
-        assert 0 <= target and target < self.width
-        assert all([0 <= cid and cid < self.width for cid in controls])
+        assert 0 <= target and target < self._width
+        assert all([0 <= cid and cid < self._width for cid in controls])
         controls = sorted(controls)
-        self.gates.append((controls, target))
-        self.tt.mcnot(controls, target)
+        self._gates.append((controls, target))
+        self._tt.mcnot(controls, target)
         return self
 
     def append(self, gate):
         controls, target = gate
         self.mcx(controls, target)
 
+    def is_swappable(self, index, ignore_identical: bool = True) -> bool:
+        lhs = self._gates[index]
+        rhs = self._gates[index + 1]
+        if ignore_identical and lhs == rhs:
+            return False
+        lhs_controls, lhs_target = lhs
+        rhs_controls, rhs_target = rhs
+        lhs_collision = lhs_target in rhs_controls
+        rhs_collision = rhs_target in lhs_controls
+        return not (lhs_collision) and not (rhs_collision)
+
     def __len__(self):
-        return len(self.gates)
+        return len(self._gates)
 
     def __eq__(self, other):
-        return (self.width, self.tt, self.gates) == (other.width, other.tt, other.gates)
+        return (self._width, self._tt, self._gates) == (other.width, other.tt, other.gates)
 
     def print(self):
-        qc = QuantumCircuit(self.width)
-        for controls, target in self.gates:
+        qc = QuantumCircuit(self._width)
+        for controls, target in self._gates:
             if len(controls) == 0:
                 qc.x(target)
             else:
