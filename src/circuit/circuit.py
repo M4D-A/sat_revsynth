@@ -15,6 +15,13 @@ class Circuit:
         self._tt.nott(target)
         return self
 
+    def cx(self, control: int, target: int):
+        assert 0 <= target and target < self._width
+        assert 0 <= control and control < self._width
+        self._gates.append(([control], target))
+        self._tt.cnot(control, target)
+        return self
+
     def mcx(self, controls: list[int], target: int):
         assert 0 <= target and target < self._width
         assert all([0 <= cid and cid < self._width for cid in controls])
