@@ -5,17 +5,17 @@ from .truth_table import TruthTable
 from ..utils.params import x_params, cx_params, mcx_params
 
 
-max_tt_size = 8
+max_bits_size = 8
 epochs = 2**8
-size_randomizer = list(randint(3, max_tt_size) for _ in range(epochs))
+bits_num_randomizer = list(randint(3, max_bits_size) for _ in range(epochs))
 
 
-@pytest.mark.parametrize("tt_size", size_randomizer)
-def test_x(tt_size):
-    ref_tt = TruthTable(tt_size).shuffle()
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_x(bits_num):
+    ref_tt = TruthTable(bits_num).shuffle()
     tt = copy(ref_tt)
 
-    target = x_params(tt_size)
+    target = x_params(bits_num)
     tt.x(target)
     for ref_row, row in zip(ref_tt.bits(), tt.bits()):
         for i, (ref_b, b) in enumerate(zip(ref_row, row)):
@@ -25,11 +25,11 @@ def test_x(tt_size):
                 assert ref_b == b
 
 
-@pytest.mark.parametrize("tt_size", size_randomizer)
-def test_cx(tt_size):
-    ref_tt = TruthTable(tt_size).shuffle()
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_cx(bits_num):
+    ref_tt = TruthTable(bits_num).shuffle()
     tt = copy(ref_tt)
-    control, target = cx_params(tt_size)
+    control, target = cx_params(bits_num)
     tt.cx(control, target)
     for ref_row, row in zip(ref_tt.bits(), tt.bits()):
         for i, (ref_b, b) in enumerate(zip(ref_row, row)):
@@ -39,11 +39,11 @@ def test_cx(tt_size):
                 assert ref_b == b
 
 
-@pytest.mark.parametrize("tt_size", size_randomizer)
-def test_mcx(tt_size):
-    ref_tt = TruthTable(tt_size).shuffle()
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_mcx(bits_num):
+    ref_tt = TruthTable(bits_num).shuffle()
     tt = copy(ref_tt)
-    controls, target = mcx_params(tt_size)
+    controls, target = mcx_params(bits_num)
     tt.mcx(controls, target)
     for ref_row, row in zip(ref_tt.bits(), tt.bits()):
         for i, (ref_b, b) in enumerate(zip(ref_row, row)):
@@ -53,52 +53,52 @@ def test_mcx(tt_size):
                 assert ref_b == b
 
 
-@pytest.mark.parametrize("tt_size", size_randomizer)
-def test_x_involutivity(tt_size):
-    ref_tt = TruthTable(tt_size).shuffle()
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_x_involutivity(bits_num):
+    ref_tt = TruthTable(bits_num).shuffle()
     tt = copy(ref_tt)
-    target = x_params(tt_size)
+    target = x_params(bits_num)
     tt.x(target)
     tt.x(target)
     assert tt == ref_tt
 
 
-@pytest.mark.parametrize("tt_size", size_randomizer)
-def test_cx_involutivity(tt_size):
-    ref_tt = TruthTable(tt_size).shuffle()
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_cx_involutivity(bits_num):
+    ref_tt = TruthTable(bits_num).shuffle()
     tt = copy(ref_tt)
-    control, target = cx_params(tt_size)
+    control, target = cx_params(bits_num)
     tt.cx(control, target)
     tt.cx(control, target)
     assert tt == ref_tt
 
 
-@pytest.mark.parametrize("tt_size", size_randomizer)
-def test_mcx_involutivity(tt_size):
-    ref_tt = TruthTable(tt_size).shuffle()
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_mcx_involutivity(bits_num):
+    ref_tt = TruthTable(bits_num).shuffle()
     tt = copy(ref_tt)
-    controls, target = mcx_params(tt_size)
+    controls, target = mcx_params(bits_num)
     tt.mcx(controls, target)
     tt.mcx(controls, target)
     assert tt == ref_tt
 
 
-@pytest.mark.parametrize("tt_size", size_randomizer)
-def test_inplace(tt_size):
-    tt_a = TruthTable(tt_size)
-    target = x_params(tt_size)
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_inplace(bits_num):
+    tt_a = TruthTable(bits_num)
+    target = x_params(bits_num)
 
     tt_b = tt_a.x(target, inplace=False)
-    assert tt_a == TruthTable(tt_size)
-    assert tt_b != TruthTable(tt_size)
+    assert tt_a == TruthTable(bits_num)
+    assert tt_b != TruthTable(bits_num)
 
     tt_a.x(target, inplace=True)
-    assert tt_a != TruthTable(tt_size)
-    assert tt_b != TruthTable(tt_size)
+    assert tt_a != TruthTable(bits_num)
+    assert tt_b != TruthTable(bits_num)
     assert tt_b == tt_a
 
     tt_a.x(target)
     tt_b.x(target)
-    assert tt_a == TruthTable(tt_size)
-    assert tt_b == TruthTable(tt_size)
+    assert tt_a == TruthTable(bits_num)
+    assert tt_b == TruthTable(bits_num)
     assert tt_b == tt_a
