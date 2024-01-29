@@ -4,9 +4,9 @@ from copy import deepcopy
 from .circuit import Circuit, Gate, TruthTable
 
 
-max_tt_size = 8
-epochs = 128
-size_randomizer = list(randint(3, max_tt_size) for _ in range(epochs))
+max_bits_num = 4
+epochs = 1024
+size_randomizer = list(randint(3, max_bits_num) for _ in range(epochs))
 
 
 @pytest.mark.parametrize("circ_size", size_randomizer)
@@ -95,19 +95,19 @@ def test_mcx_involutivity(circ_size):
 @pytest.mark.parametrize("circ_size", size_randomizer)
 def test_complex_involution(circ_size):
     gates: list[Gate] = []
-    gates_num = randint(2, 8)
+    gates_num = randint(2, 32)
     for _ in range(gates_num):
         controls_num = randint(0, circ_size - 2)
         ids = sample(range(0, circ_size - 1), controls_num + 1)
         target = ids[0]
-        controls = [] if len(ids) == 1 else ids[0:]
+        controls = [] if len(ids) == 1 else ids[1:]
         gates.append(Gate((list(controls), target)))
 
     circ = Circuit(circ_size)
     for gate in gates:
         circ.append(gate)
 
-    for gate in deepcopy(gates)[::-1]:
+    for gate in reversed(gates):
         circ.append(gate)
 
     assert len(circ) == 2 * gates_num
