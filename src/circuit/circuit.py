@@ -1,4 +1,4 @@
-from ..truthtable.truthtable import TruthTable
+from ..truth_table.truth_table import TruthTable
 
 Gate = tuple[list[int], int]  # Gate in integer representation
 
