@@ -20,6 +20,25 @@ class Circuit:
     def gates(self):
         return self._gates
 
+    def __copy__(self):
+        new = Circuit(self._width)
+        new._tt = copy(self._tt)
+        new._gates = deepcopy(self._gates)
+        return new
+
+    def __len__(self):
+        return len(self._gates)
+
+    def __eq__(self, other):
+        return (self._width, self._tt, self._gates) == (other.width, other.tt, other.gates)
+
+    def __add__(self, other):
+        assert self._width == other._width
+        new_width = self._width
+        new_circuit = Circuit(new_width)
+        new_circuit._gates = self._gates + other._gates
+        new_circuit._tt = self._tt + other._tt
+
     @inplace
     def x(self, target: int, **_):
         assert 0 <= target and target < self._width
@@ -64,22 +83,3 @@ class Circuit:
     def swappable_gates(self, ignore_identical: bool = True) -> list[int]:
         indices = [i for i in range(len(self)) if self.gate_swappable(i, ignore_identical)]
         return indices
-
-    def __copy__(self):
-        new = Circuit(self._width)
-        new._tt = copy(self._tt)
-        new._gates = deepcopy(self._gates)
-        return new
-
-    def __len__(self):
-        return len(self._gates)
-
-    def __eq__(self, other):
-        return (self._width, self._tt, self._gates) == (other.width, other.tt, other.gates)
-
-    def __add__(self, other):
-        assert self._width == other._width
-        new_width = self._width
-        new_circuit = Circuit(new_width)
-        new_circuit._gates = self._gates + other._gates
-        new_circuit._tt = self._tt + other._tt

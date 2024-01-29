@@ -23,6 +23,15 @@ class TruthTable:
         self._bits = bits
         self._bits_num = bits_num
 
+    def values(self):
+        return [self.row_to_value(row) for row in self._bits]
+
+    def bits_num(self):
+        return self._bits_num
+
+    def bits(self):
+        return self._bits
+
     def __copy__(self):
         return TruthTable(self._bits_num, bits=[copy(row) for row in self.bits()])
 
@@ -54,15 +63,6 @@ class TruthTable:
     @classmethod
     def value_to_row(cls, value: int, bits_num: int) -> list[int]:
         return [(value >> s) & 1 for s in range(bits_num)]
-
-    def values(self):
-        return [self.row_to_value(row) for row in self._bits]
-
-    def bits_num(self):
-        return self._bits_num
-
-    def bits(self):
-        return self._bits
 
     @ inplace
     def x(self, target: int, **_):
