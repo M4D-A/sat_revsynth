@@ -5,7 +5,7 @@ from .circuit import Circuit, Gate, TruthTable
 
 
 max_bits_num = 4
-epochs = 1024
+epochs = 2**8
 size_randomizer = list(randint(3, max_bits_num) for _ in range(epochs))
 
 
