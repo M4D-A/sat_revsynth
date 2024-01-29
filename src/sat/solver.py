@@ -1,7 +1,7 @@
 from pysat.solvers import Cadical153, Lingeling, Glucose4
 from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
-from .cnf import CNF
+from cnf import CNF
 
 Solution = tuple[bool, list[int]]
 
