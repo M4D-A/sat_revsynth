@@ -26,6 +26,11 @@ class TruthTable:
         new_values = [other.values()[v] for v in self.values()]
         return TruthTable(self._bits_num, new_values)
 
+    def __str__(self):
+        header = f"bits = {self.bits_num()}, rows = {len(self)}\n\n"
+        rows = "\n".join([str(row) for row in self.bits()])
+        return header + rows
+
     def values(self):
         return self._values
 
