@@ -1,8 +1,7 @@
 import pytest
 from random import randint, sample
-from .circuit import Circuit, Gate
-from truth_tables import TruthTable
 from copy import deepcopy
+from .circuit import Circuit, Gate, TruthTable
 
 
 max_tt_size = 8

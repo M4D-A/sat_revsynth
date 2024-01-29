@@ -1,6 +1,7 @@
 import pytest
 from random import randint, sample
-from .truth_table import TruthTable
+from .truthtable import TruthTable
+
 from copy import deepcopy
 
 
