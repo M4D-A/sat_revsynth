@@ -1,6 +1,6 @@
 import pytest
 from random import randint, sample
-from copy import deepcopy
+from copy import copy, copy
 from .circuit import Circuit, Gate, TruthTable
 
 
@@ -12,7 +12,8 @@ size_randomizer = list(randint(3, max_bits_num) for _ in range(epochs))
 @pytest.mark.parametrize("circ_size", size_randomizer)
 def test_x(circ_size):
     ref_circ = Circuit(circ_size)
-    circ = deepcopy(ref_circ)
+    ref_circ._tt.shuffle()
+    circ = copy(ref_circ)
     target = randint(0, circ.width() - 1)
     circ.x(target)
     assert len(circ) == 1
@@ -28,7 +29,8 @@ def test_x(circ_size):
 @pytest.mark.parametrize("circ_size", size_randomizer)
 def test_cx(circ_size):
     ref_circ = Circuit(circ_size)
-    circ = deepcopy(ref_circ)
+    ref_circ._tt.shuffle()
+    circ = copy(ref_circ)
     control, target = sample(range(0, circ_size - 1), 2)
     circ.cx(control, target)
     assert len(circ) == 1
@@ -44,7 +46,8 @@ def test_cx(circ_size):
 @pytest.mark.parametrize("circ_size", size_randomizer)
 def test_mcx(circ_size):
     ref_circ = Circuit(circ_size)
-    circ = deepcopy(ref_circ)
+    ref_circ._tt.shuffle()
+    circ = copy(ref_circ)
     special_ids_num = randint(2, circ_size - 1)
     target, *controls = sample(range(0, circ_size - 1), special_ids_num)
     circ.mcx(controls, target)
@@ -106,11 +109,8 @@ def test_complex_involution(circ_size):
     circ = Circuit(circ_size)
     for gate in gates:
         circ.append(gate)
-
     for gate in reversed(gates):
         circ.append(gate)
-
-    assert len(circ) == 2 * gates_num
 
     for i, g in enumerate(circ.gates()):
         if i < gates_num:
@@ -119,4 +119,5 @@ def test_complex_involution(circ_size):
             controls, target = gates[len(circ) - i - 1]
         assert g == (sorted(controls), target)
 
+    assert len(circ) == 2 * gates_num
     assert circ.tt() == TruthTable(circ_size)
