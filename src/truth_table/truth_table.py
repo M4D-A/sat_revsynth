@@ -6,14 +6,18 @@ from copy import copy
 
 class TruthTable:
     def __init__(self, bits_num: int,
-                 bits: list[list[int]] | None = None,
+                 values: Sequence[int] | None = None,
+                 bits: Sequence[Sequence[int]] | None = None,
                  ):
+        assert values is not None and bits is not None, "Cannot state both [bits] and [values]"
         rows_num = 2 ** bits_num
-
-        if bits is None:
+        if bits is None and values is None:
             values = range(rows_num)
             bits = [self.value_to_row(value, bits_num) for value in values]
-        elif bits is not None:
+        elif bits is None and values is not None:
+            assert len(values) == rows_num
+            bits = [self.value_to_row(value, bits_num) for value in values]
+        elif bits is not None and values is None:
             assert len(bits) == rows_num
 
         self._bits = bits
