@@ -6,22 +6,16 @@ from copy import copy
 
 class TruthTable:
     def __init__(self, bits_num: int,
-                 values: Sequence[int] | None = None,
                  bits: list[list[int]] | None = None,
                  ):
-        assert values is None or bits is None, "Values and Bits cannot be declared simultaneously"
         rows_num = 2 ** bits_num
 
-        if values is None and bits is None:
+        if bits is None:
             values = range(rows_num)
-            bits = [self.value_to_row(value, bits_num) for value in values]
-        elif values is not None:
-            assert len(values) == rows_num
             bits = [self.value_to_row(value, bits_num) for value in values]
         elif bits is not None:
             assert len(bits) == rows_num
 
-        assert bits is not None
         self._bits = bits
         self._bits_num = bits_num
 
@@ -42,8 +36,8 @@ class TruthTable:
         return TruthTable(self._bits_num, new_values)
 
     def __str__(self):
-        header = f"bits = {self.bits_num()}, rows = {len(self)}\n\n"
-        rows = "\n".join([str(i) + ": " + str(row) for i, row in zip(self.values(), self.bits())])
+        header = f"bits = {self._bits_num}, rows = {len(self)}\n\n"
+        rows = "\n".join([str(i) + ": " + str(row) for i, row in zip(self.values(), self._bits)])
         return header + rows
 
     @classmethod
@@ -58,7 +52,7 @@ class TruthTable:
         return [(value >> s) & 1 for s in range(bits_num)]
 
     def values(self):
-        return [self.row_to_value(row) for row in self.bits()]
+        return [self.row_to_value(row) for row in self._bits]
 
     def bits_num(self):
         return self._bits_num
@@ -72,30 +66,24 @@ class TruthTable:
             row[target] = 1 - row[target]
         return self
 
-    def cx(self, control: int, target: int, inplace: bool = True) -> "TruthTable":
-        if inplace:
-            for row in self._bits:
-                if row[control] == 1:
-                    row[target] = 1 - row[target]
-            return self
-        else:
-            new_tt = TruthTable(self._bits_num)
-            return new_tt.cx(control, target, True)
-
-    def mcx(self, controls: Iterable[int], target: int, inplace: bool = True) -> "TruthTable":
-        if inplace:
-            for row in self._bits:
-                if all([row[control] == 1 for control in controls]):
-                    row[target] = 1 - row[target]
-            return self
-        else:
-            new_tt = TruthTable(self._bits_num)
-            return new_tt.mcx(controls, target, True)
+    @ inplace
+    def cx(self, control: int, target: int, **_) -> "TruthTable":
+        for row in self._bits:
+            if row[control] == 1:
+                row[target] = 1 - row[target]
+        return self
 
     @ inplace
-    def shuffle(self):
-        reordering = self.values().copy()
-        shuffle(reordering)
-        new_bits = [self._bits[i] for i in reordering]
+    def mcx(self, controls: Iterable[int], target: int, **_) -> "TruthTable":
+        for row in self._bits:
+            if all([row[control] == 1 for control in controls]):
+                row[target] = 1 - row[target]
+        return self
+
+    @ inplace
+    def shuffle(self, **_) -> "TruthTable":
+        assert self._bits is not None
+        new_bits = [copy(row) for row in self.bits()]
+        shuffle(new_bits)
         self._bits = new_bits
         return self
