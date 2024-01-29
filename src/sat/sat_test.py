@@ -10,7 +10,6 @@ from .solver import Solver
 solver_names = Solver.builtin_solvers.keys()
 solvers = [Solver(solver_name) for solver_name in solver_names]
 max_variables = 16
-short_max_variables = 6
 epochs = range(32)
 
 
