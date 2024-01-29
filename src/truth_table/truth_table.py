@@ -1,4 +1,4 @@
-from collections.abc import Sequence, Iterable
+from collections.abc import Iterable
 from random import shuffle
 from ..utils.inplace import inplace
 from copy import copy
@@ -6,19 +6,21 @@ from copy import copy
 
 class TruthTable:
     def __init__(self, bits_num: int,
-                 values: Sequence[int] | None = None,
-                 bits: Sequence[Sequence[int]] | None = None,
+                 values: list[int] | None = None,
+                 bits: list[list[int]] | None = None,
                  ):
-        assert values is not None and bits is not None, "Cannot state both [bits] and [values]"
         rows_num = 2 ** bits_num
-        if bits is None and values is None:
-            values = range(rows_num)
-            bits = [self.value_to_row(value, bits_num) for value in values]
-        elif bits is None and values is not None:
-            assert len(values) == rows_num
-            bits = [self.value_to_row(value, bits_num) for value in values]
-        elif bits is not None and values is None:
+        assert values is None or bits is None
+
+        if bits is not None:
             assert len(bits) == rows_num
+            assert all(len(row) == bits_num for row in bits)
+        else:
+            if values is None:
+                values = list(range(rows_num))
+            else:
+                assert len(values) == rows_num
+            bits = [self.value_to_row(row, bits_num) for row in values]
 
         self._bits = bits
         self._bits_num = bits_num
