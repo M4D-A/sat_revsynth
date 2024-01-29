@@ -24,11 +24,6 @@ def mcx_params(bits_num):
     return controls, target
 
 
-def test_main():
-    ref_tt = TruthTable(3).x(0)
-    print(ref_tt)
-
-
 @pytest.mark.parametrize("tt_size", size_randomizer)
 def test_x(tt_size):
     ref_tt = TruthTable(tt_size).shuffle()
@@ -114,4 +109,10 @@ def test_inplace(tt_size):
     tt_a.x(target, inplace=True)
     assert tt_a != TruthTable(tt_size)
     assert tt_b != TruthTable(tt_size)
+    assert tt_b == tt_a
+
+    tt_a.x(target)
+    tt_b.x(target)
+    assert tt_a == TruthTable(tt_size)
+    assert tt_b == TruthTable(tt_size)
     assert tt_b == tt_a
