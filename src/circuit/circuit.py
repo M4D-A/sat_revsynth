@@ -12,14 +12,14 @@ class Circuit:
     def x(self, target: int):
         assert 0 <= target and target < self._width
         self._gates.append(([], target))
-        self._tt.nott(target)
+        self._tt.x(target)
         return self
 
     def cx(self, control: int, target: int):
         assert 0 <= target and target < self._width
         assert 0 <= control and control < self._width
         self._gates.append(([control], target))
-        self._tt.cnot(control, target)
+        self._tt.cx(control, target)
         return self
 
     def mcx(self, controls: list[int], target: int):
@@ -27,7 +27,7 @@ class Circuit:
         assert all([0 <= cid and cid < self._width for cid in controls])
         controls = sorted(controls)
         self._gates.append((controls, target))
-        self._tt.mcnot(controls, target)
+        self._tt.mcx(controls, target)
         return self
 
     def append(self, gate):
