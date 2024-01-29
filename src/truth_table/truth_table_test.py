@@ -24,9 +24,14 @@ def mcx_params(bits_num):
     return controls, target
 
 
+def test_main():
+    ref_tt = TruthTable(3).x(0)
+    print(ref_tt)
+
+
 @pytest.mark.parametrize("tt_size", size_randomizer)
 def test_x(tt_size):
-    ref_tt = TruthTable(tt_size).shuffle(inplace=False)
+    ref_tt = TruthTable(tt_size).shuffle()
     tt = copy(ref_tt)
 
     target = x_params(tt_size)
@@ -41,7 +46,7 @@ def test_x(tt_size):
 
 @pytest.mark.parametrize("tt_size", size_randomizer)
 def test_cx(tt_size):
-    ref_tt = TruthTable(tt_size).shuffle(inplace=False)
+    ref_tt = TruthTable(tt_size).shuffle()
     tt = copy(ref_tt)
     control, target = cx_params(tt_size)
     tt.cx(control, target)
@@ -55,7 +60,7 @@ def test_cx(tt_size):
 
 @pytest.mark.parametrize("tt_size", size_randomizer)
 def test_mcx(tt_size):
-    ref_tt = TruthTable(tt_size).shuffle(inplace=False)
+    ref_tt = TruthTable(tt_size).shuffle()
     tt = copy(ref_tt)
     controls, target = mcx_params(tt_size)
     tt.mcx(controls, target)
@@ -69,7 +74,7 @@ def test_mcx(tt_size):
 
 @pytest.mark.parametrize("tt_size", size_randomizer)
 def test_x_involutivity(tt_size):
-    ref_tt = TruthTable(tt_size).shuffle(inplace=False)
+    ref_tt = TruthTable(tt_size).shuffle()
     tt = copy(ref_tt)
     target = x_params(tt_size)
     tt.x(target)
@@ -79,7 +84,7 @@ def test_x_involutivity(tt_size):
 
 @pytest.mark.parametrize("tt_size", size_randomizer)
 def test_cx_involutivity(tt_size):
-    ref_tt = TruthTable(tt_size).shuffle(inplace=False)
+    ref_tt = TruthTable(tt_size).shuffle()
     tt = copy(ref_tt)
     control, target = cx_params(tt_size)
     tt.cx(control, target)
@@ -89,7 +94,7 @@ def test_cx_involutivity(tt_size):
 
 @pytest.mark.parametrize("tt_size", size_randomizer)
 def test_mcx_involutivity(tt_size):
-    ref_tt = TruthTable(tt_size).shuffle(inplace=False)
+    ref_tt = TruthTable(tt_size).shuffle()
     tt = copy(ref_tt)
     controls, target = mcx_params(tt_size)
     tt.mcx(controls, target)
