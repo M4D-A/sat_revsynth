@@ -40,17 +40,16 @@ class TruthTable:
     def bits(self):
         return self._bits
 
-    def nott(self, target: int, inplace: bool = True) -> "TruthTable":
+    def x(self, target: int, inplace: bool = True) -> "TruthTable":
         if inplace:
             for row in self._bits:
                 row[target] = 1 - row[target]
             return self
         else:
             new_tt = TruthTable(self._bits_num)
-            return new_tt.nott(target, True)
+            return new_tt.x(target, True)
 
-    def cnot(self, control: int, target: int,
-             inplace: bool = True) -> "TruthTable":
+    def cx(self, control: int, target: int, inplace: bool = True) -> "TruthTable":
         if inplace:
             for row in self._bits:
                 if row[control] == 1:
@@ -58,10 +57,9 @@ class TruthTable:
             return self
         else:
             new_tt = TruthTable(self._bits_num)
-            return new_tt.cnot(control, target, True)
+            return new_tt.cx(control, target, True)
 
-    def mcnot(self, controls: Iterable[int], target: int,
-              inplace: bool = True) -> "TruthTable":
+    def mcx(self, controls: Iterable[int], target: int, inplace: bool = True) -> "TruthTable":
         if inplace:
             for row in self._bits:
                 if all([row[control] == 1 for control in controls]):
@@ -69,7 +67,7 @@ class TruthTable:
             return self
         else:
             new_tt = TruthTable(self._bits_num)
-            return new_tt.mcnot(controls, target, True)
+            return new_tt.mcx(controls, target, True)
 
     def shuffle(self):
         reordering = self.values().copy()
