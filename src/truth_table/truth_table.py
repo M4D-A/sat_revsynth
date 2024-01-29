@@ -12,15 +12,13 @@ class TruthTable:
         rows_num = 2 ** bits_num
         assert values is None or bits is None
 
-        if bits is not None:
+        if bits is None:
+            values = list(range(rows_num)) if values is None else values
+            assert len(values) == rows_num
+            bits = [self.value_to_row(row, bits_num) for row in values]
+        else:
             assert len(bits) == rows_num
             assert all(len(row) == bits_num for row in bits)
-        else:
-            if values is None:
-                values = list(range(rows_num))
-            else:
-                assert len(values) == rows_num
-            bits = [self.value_to_row(row, bits_num) for row in values]
 
         self._bits = bits
         self._bits_num = bits_num
