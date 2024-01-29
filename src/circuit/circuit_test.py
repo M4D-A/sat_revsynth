@@ -1,7 +1,8 @@
 import pytest
 from random import randint, sample
-from copy import copy, copy
+from copy import copy
 from .circuit import Circuit, Gate, TruthTable
+from ..utils.params import x_params, cx_params, mcx_params
 
 
 max_bits_num = 4
@@ -121,3 +122,28 @@ def test_complex_involution(circ_size):
 
     assert len(circ) == 2 * gates_num
     assert circ.tt() == TruthTable(circ_size)
+
+
+@pytest.mark.parametrize("circ_size", [3])
+def test_inplace(circ_size):
+    circ_a = Circuit(circ_size)
+    target = 0
+    circ_b = circ_a.x(target, inplace=False)
+
+    assert circ_a == Circuit(circ_size)
+    assert circ_a.tt() == TruthTable(circ_size)
+
+    assert circ_b != Circuit(circ_size)
+    assert circ_b == Circuit(circ_size).x(target)
+    assert circ_b.tt() == TruthTable(circ_size).x(target)
+
+    circ_a.x(target, inplace=True)
+    assert circ_a != Circuit(circ_size)
+    assert circ_b != Circuit(circ_size)
+    assert circ_b == circ_a
+
+    circ_a.pop()
+    circ_b.pop()
+    assert circ_a == Circuit(circ_size)
+    assert circ_b == Circuit(circ_size)
+    assert circ_b == circ_a

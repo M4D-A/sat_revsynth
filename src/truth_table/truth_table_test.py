@@ -1,27 +1,13 @@
 import pytest
-from random import randint, sample
-from .truth_table import TruthTable
+from random import randint
 from copy import copy
+from .truth_table import TruthTable
+from ..utils.params import x_params, cx_params, mcx_params
+
 
 max_tt_size = 8
 epochs = 2**8
 size_randomizer = list(randint(3, max_tt_size) for _ in range(epochs))
-
-
-def x_params(bits_num):
-    target = randint(0, bits_num - 1)
-    return target
-
-
-def cx_params(bits_num):
-    control, target = sample(range(0, bits_num - 1), 2)
-    return control, target
-
-
-def mcx_params(bits_num):
-    special_ids_num = randint(2, bits_num - 1)
-    target, *controls = sample(range(0, bits_num - 1), special_ids_num)
-    return controls, target
 
 
 @pytest.mark.parametrize("tt_size", size_randomizer)

@@ -26,11 +26,14 @@ class Circuit:
         new._gates = deepcopy(self._gates)
         return new
 
+    def __str__(self):
+        return f"width = {self._width} gates_num = {len(self._gates)}\n{self._tt}"
+
     def __len__(self):
         return len(self._gates)
 
     def __eq__(self, other):
-        return (self._width, self._tt, self._gates) == (other.width, other.tt, other.gates)
+        return (self._width, self._tt, self._gates) == (other._width, other._tt, other._gates)
 
     def __add__(self, other):
         assert self._width == other._width
@@ -67,6 +70,13 @@ class Circuit:
     def append(self, gate, **_):
         controls, target = gate
         self.mcx(controls, target)
+        return self
+
+    @inplace
+    def pop(self, **_):
+        controls, target = self._gates[-1]
+        self._tt.mcx(controls, target)
+        self._gates.pop()
         return self
 
     def gate_swappable(self, index, ignore_identical: bool = True) -> bool:
