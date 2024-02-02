@@ -86,6 +86,19 @@ class Circuit:
         self._gates.reverse()
         return self
 
+    @inplace
+    def rotate(self, shift: int, **_) -> "Circuit":
+        size = len(self)
+        shift = (shift % size) + size % size
+        gates = self._gates
+        new_gates = gates[shift:] + gates[:shift]
+        new_tt = TruthTable(self._width)
+        for gate in new_gates:
+            new_tt.mcx(*gate)
+        self._gates = new_gates
+        self._tt = new_tt
+        return self
+
     def gate_swappable(self, index, ignore_identical: bool = True) -> bool:
         lhs = self._gates[index]
         rhs = self._gates[(index + 1) % len(self)]
