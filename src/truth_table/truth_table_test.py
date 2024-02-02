@@ -123,3 +123,15 @@ def test_inplace(x_params, identity_tt):
     assert tt_a == identity_tt
     assert tt_b == identity_tt
     assert tt_b == tt_a
+
+
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_inverse(random_tt, identity_tt):
+    inverse_tt = random_tt.inverse(inplace=False)
+    rand_values = random_tt.values()
+    inv_values = inverse_tt.values()
+    for i in range(2**random_tt.bits_num()):
+        assert rand_values[inv_values[i]] == i
+        assert inv_values[rand_values[i]] == i
+    assert random_tt + inverse_tt == identity_tt
+    assert inverse_tt + random_tt == identity_tt
