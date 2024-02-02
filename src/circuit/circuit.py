@@ -11,46 +11,47 @@ class Circuit:
         self._tt = TruthTable(bits_num)
         self._gates: list[Gate] = []
 
-    def width(self):
+    def width(self) -> int:
         return self._width
 
-    def tt(self):
+    def tt(self) -> TruthTable:
         return self._tt
 
-    def gates(self):
+    def gates(self) -> list[Gate]:
         return self._gates
 
-    def __copy__(self):
+    def __copy__(self) -> "Circuit":
         new = Circuit(self._width)
         new._tt = copy(self._tt)
         new._gates = deepcopy(self._gates)
         return new
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"width = {self._width} gates_num = {len(self._gates)}\n{self._tt}"
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._gates)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return (self._width, self._tt, self._gates) == (other._width, other._tt, other._gates)
 
-    def __add__(self, other):
+    def __add__(self, other) -> "Circuit":
         assert self._width == other._width
         new_width = self._width
         new_circuit = Circuit(new_width)
         new_circuit._gates = self._gates + other._gates
         new_circuit._tt = self._tt + other._tt
+        return new_circuit
 
     @inplace
-    def x(self, target: int, **_):
+    def x(self, target: int, **_) -> "Circuit":
         assert 0 <= target and target < self._width
         self._gates.append(([], target))
         self._tt.x(target)
         return self
 
     @inplace
-    def cx(self, control: int, target: int, **_):
+    def cx(self, control: int, target: int, **_) -> "Circuit":
         assert 0 <= target and target < self._width
         assert 0 <= control and control < self._width
         self._gates.append(([control], target))
@@ -58,7 +59,7 @@ class Circuit:
         return self
 
     @inplace
-    def mcx(self, controls: list[int], target: int, **_):
+    def mcx(self, controls: list[int], target: int, **_) -> "Circuit":
         assert 0 <= target and target < self._width
         assert all([0 <= cid and cid < self._width for cid in controls])
         controls = sorted(controls)
@@ -67,16 +68,22 @@ class Circuit:
         return self
 
     @inplace
-    def append(self, gate, **_):
+    def append(self, gate, **_) -> "Circuit":
         controls, target = gate
         self.mcx(controls, target)
         return self
 
     @inplace
-    def pop(self, **_):
+    def pop(self, **_) -> "Circuit":
         controls, target = self._gates[-1]
         self._tt.mcx(controls, target)
         self._gates.pop()
+        return self
+
+    @inplace
+    def reverse(self, **_) -> "Circuit":
+        self._tt.inverse(inplace=True)
+        self._gates.reverse()
         return self
 
     def gate_swappable(self, index, ignore_identical: bool = True) -> bool:

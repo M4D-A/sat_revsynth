@@ -175,3 +175,15 @@ def test_inplace(empty_circuit, identity_tt):
     assert circ_a == empty_circuit
     assert circ_b == empty_circuit
     assert circ_b == circ_a
+
+
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_reverse(empty_circuit, random_gate_list, identity_tt):
+    rand_circuit = copy(empty_circuit)
+    for gate in random_gate_list:
+        rand_circuit.append(gate)
+    reversed_circuit = rand_circuit.reverse(inplace=False)
+    assert (rand_circuit + reversed_circuit).tt() == identity_tt
+    assert (reversed_circuit + rand_circuit).tt() == identity_tt
+    assert len(rand_circuit + reversed_circuit) == 2 * len(random_gate_list)
+    assert len(reversed_circuit + rand_circuit) == 2 * len(random_gate_list)
