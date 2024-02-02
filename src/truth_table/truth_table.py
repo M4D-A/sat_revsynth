@@ -100,3 +100,15 @@ class TruthTable:
             inverse_values[p] = i
         self._bits = [self.value_to_row(row, self._bits_num) for row in inverse_values]
         return self
+
+    @inplace
+    def permute(self, permutation: list[int], **_) -> "TruthTable":
+        assert len(permutation) == self._bits_num
+        assert sorted(permutation) == list(range(self._bits_num))
+        new_bits = [[0] * self._bits_num for _ in range(len(self))]
+        for i in range(self._bits_num):
+            new_i = permutation[i]
+            for r_id, row in enumerate(self._bits):
+                new_bits[r_id][new_i] = row[i]
+        self._bits = new_bits
+        return self

@@ -1,5 +1,5 @@
 import pytest
-from random import randint, sample
+from random import randint, sample, shuffle
 from copy import copy
 from .truth_table import TruthTable
 
@@ -36,6 +36,16 @@ def random_tt(bits_num):
 @pytest.fixture
 def identity_tt(bits_num):
     return TruthTable(bits_num)
+
+
+@pytest.fixture
+def random_permutations(bits_num):
+    permutation = list(range(bits_num))
+    shuffle(permutation)
+    inv_permutation = [0] * bits_num
+    for i, v in enumerate(permutation):
+        inv_permutation[v] = i
+    return (permutation, inv_permutation)
 
 
 @pytest.mark.parametrize("bits_num", bits_num_randomizer)
@@ -135,3 +145,15 @@ def test_inverse(random_tt, identity_tt):
         assert inv_values[rand_values[i]] == i
     assert random_tt + inverse_tt == identity_tt
     assert inverse_tt + random_tt == identity_tt
+
+
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_permutation(random_tt, random_permutations):
+    bits_num = random_tt.bits_num()
+    permutation, inv_permutation = random_permutations
+    permuted_tt = random_tt.permute(permutation, inplace=False)
+    for row_a, row_b in zip(permuted_tt.bits(), random_tt.bits()):
+        for i in range(bits_num):
+            assert row_a[permutation[i]] == row_b[i]
+    permuted_tt.permute(inv_permutation)
+    assert permuted_tt == random_tt
