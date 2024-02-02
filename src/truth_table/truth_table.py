@@ -91,3 +91,12 @@ class TruthTable:
         shuffle(new_bits)
         self._bits = new_bits
         return self
+
+    @inplace
+    def inverse(self, **_) -> "TruthTable":
+        values = self.values()
+        inverse_values = [-1] * len(values)
+        for i, p in enumerate(values):
+            inverse_values[p] = i
+        self._bits = [self.value_to_row(row, self._bits_num) for row in inverse_values]
+        return self
