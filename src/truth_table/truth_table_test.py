@@ -151,11 +151,11 @@ def test_inverse(random_tt, identity_tt):
 def test_permutation(random_tt, random_permutations):
     bits_num = random_tt.bits_num()
     permutation, inv_permutation = random_permutations
-    permuted_tt = random_tt.permute(permutation, inplace=False)
+    permuted_tt = random_tt.permute(permutation, False, inplace=False)
     for row_a, row_b in zip(permuted_tt.bits(), random_tt.bits()):
         for i in range(bits_num):
             assert row_a[permutation[i]] == row_b[i]
-    permuted_tt.permute(inv_permutation)
+    permuted_tt.permute(inv_permutation, False)
     assert permuted_tt == random_tt
 
 
