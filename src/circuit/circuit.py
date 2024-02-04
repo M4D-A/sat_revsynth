@@ -84,7 +84,6 @@ class Circuit:
 
     @inplace
     def pop(self, **_) -> "Circuit":
-        controls, target = self._gates[-1]
         self._gates.pop()
         self._tt = None
         return self
