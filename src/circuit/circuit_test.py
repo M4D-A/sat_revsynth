@@ -205,6 +205,18 @@ def test_permute(random_circuit, random_permutations):
 
 
 @pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_swap(random_circuit):
+    swap_id = randint(0, len(random_circuit) - 1)
+    swapped = random_circuit.swap(swap_id, inplace=False)
+    assert len(swapped) == len(random_circuit)
+    assert swapped[swap_id] == random_circuit[(swap_id + 1) % len(swapped)]
+    assert random_circuit[swap_id] == swapped[(swap_id + 1) % len(swapped)]
+    for i, (gate_a, gate_b) in enumerate(zip(swapped, random_circuit)):
+        if i not in [swap_id, (swap_id + 1) % len(swapped)]:
+            assert gate_a == gate_b
+
+
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
 def test_permutations(bits_num):
     circuit = Circuit(bits_num).cx(0, 1)
     permutations = circuit.permutations()
@@ -235,3 +247,10 @@ def test_permutations(bits_num):
 def test_rotations(random_circuit):
     rotations = random_circuit.rotations()
     assert len(rotations) <= len(random_circuit)
+
+
+def test_unroll():
+    circuit = Circuit(2).cx(0, 1).x(1).x(1).cx(0, 1)
+    swap_space = circuit.unroll()
+    for c in swap_space:
+        print(c)
