@@ -8,13 +8,17 @@ Gate = tuple[list[int], int]  # Gate in integer representation
 class Circuit:
     def __init__(self, bits_num: int):
         self._width = bits_num
-        self._tt = TruthTable(bits_num)
+        self._tt: TruthTable | None = None
         self._gates: list[Gate] = []
 
     def width(self) -> int:
         return self._width
 
     def tt(self) -> TruthTable:
+        if self._tt is None:
+            self._tt = TruthTable(self._width)
+            for controls, target in self._gates:
+                self._tt.mcx(controls, target)
         return self._tt
 
     def gates(self) -> list[Gate]:
@@ -31,28 +35,27 @@ class Circuit:
         gates = ""
         for controls, target in self._gates:
             gates += f"{str(controls)} -> {target}\n"
-        tt = f"{self._tt}"
+        tt = f"{self.tt()}"
         return header + gates + tt
 
     def __len__(self) -> int:
         return len(self._gates)
 
     def __eq__(self, other) -> bool:
-        return (self._width, self._tt, self._gates) == (other._width, other._tt, other._gates)
+        return (self._width, self._gates) == (other._width, other._gates)
 
     def __add__(self, other) -> "Circuit":
         assert self._width == other._width
         new_width = self._width
         new_circuit = Circuit(new_width)
         new_circuit._gates = self._gates + other._gates
-        new_circuit._tt = self._tt + other._tt
         return new_circuit
 
     @inplace
     def x(self, target: int, **_) -> "Circuit":
         assert 0 <= target and target < self._width
         self._gates.append(([], target))
-        self._tt.x(target)
+        self._tt = None
         return self
 
     @inplace
@@ -60,7 +63,7 @@ class Circuit:
         assert 0 <= target and target < self._width
         assert 0 <= control and control < self._width
         self._gates.append(([control], target))
-        self._tt.cx(control, target)
+        self._tt = None
         return self
 
     @inplace
@@ -69,26 +72,27 @@ class Circuit:
         assert all([0 <= cid and cid < self._width for cid in controls])
         controls = sorted(controls)
         self._gates.append((controls, target))
-        self._tt.mcx(controls, target)
+        self._tt = None
         return self
 
     @inplace
     def append(self, gate, **_) -> "Circuit":
         controls, target = gate
         self.mcx(controls, target)
+        self._tt = None
         return self
 
     @inplace
     def pop(self, **_) -> "Circuit":
         controls, target = self._gates[-1]
-        self._tt.mcx(controls, target)
         self._gates.pop()
+        self._tt = None
         return self
 
     @inplace
     def reverse(self, **_) -> "Circuit":
-        self._tt.inverse(inplace=True)
         self._gates.reverse()
+        self._tt = None
         return self
 
     @inplace
@@ -97,11 +101,8 @@ class Circuit:
         shift = (shift % size) + size % size
         gates = self._gates
         new_gates = gates[shift:] + gates[:shift]
-        new_tt = TruthTable(self._width)
-        for gate in new_gates:
-            new_tt.mcx(*gate)
         self._gates = new_gates
-        self._tt = new_tt
+        self._tt = None
         return self
 
     @inplace
@@ -112,7 +113,7 @@ class Circuit:
             new_controls = sorted([permutation[c] for c in controls])
             new_gates.append((new_controls, new_target))
         self._gates = new_gates
-        self._tt.permute(permutation, permute_input=True, inplace=True)
+        self._tt = None
         return self
 
     def gate_swappable(self, index, ignore_identical: bool = True) -> bool:
