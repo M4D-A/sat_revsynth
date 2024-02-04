@@ -1,6 +1,7 @@
 from ..truth_table.truth_table import TruthTable
 from ..utils.inplace import inplace
 from copy import copy, deepcopy
+from itertools import permutations
 
 Gate = tuple[list[int], int]  # Gate in integer representation
 
@@ -50,6 +51,10 @@ class Circuit:
         new_circuit = Circuit(new_width)
         new_circuit._gates = self._gates + other._gates
         return new_circuit
+
+    @classmethod
+    def filter_duplicates(cls, unfiltered: list["Circuit"]) -> list["Circuit"]:
+        return [circ for i, circ in enumerate(unfiltered) if circ not in unfiltered[:i]]
 
     @inplace
     def x(self, target: int, **_) -> "Circuit":
@@ -104,6 +109,11 @@ class Circuit:
         self._tt = None
         return self
 
+    def rotations(self) -> list["Circuit"]:
+        equivalents = [self.rotate(s, inplace=False) for s in range(len(self))]
+        unique = self.filter_duplicates(equivalents)
+        return unique
+
     @inplace
     def permute(self, permutation: list[int], **_) -> "Circuit":
         new_gates: list[Gate] = []
@@ -114,6 +124,12 @@ class Circuit:
         self._gates = new_gates
         self._tt = None
         return self
+
+    def permutations(self) -> list["Circuit"]:
+        all_permutations = permutations(list(range(self._width)))
+        equivalents = [self.permute(list(perm), inplace=False) for perm in all_permutations]
+        unique = self.filter_duplicates(equivalents)
+        return unique
 
     def gate_swappable(self, index, ignore_identical: bool = True) -> bool:
         lhs = self._gates[index]

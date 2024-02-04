@@ -2,9 +2,11 @@ import pytest
 from random import randint, sample, shuffle
 from copy import copy
 from .circuit import Circuit, Gate, TruthTable
+from math import factorial
 
 
-max_bits_num = 4
+max_bits_num = 5
+max_gates_num = 6
 epochs = 2**8
 bits_num_randomizer = list(randint(3, max_bits_num) for _ in range(epochs))
 
@@ -30,11 +32,11 @@ def mcx_params(bits_num):
 
 @pytest.fixture
 def random_circuit(bits_num):
-    gates_num = randint(2, 32)
+    gates_num = randint(2, max_gates_num)
     circ = Circuit(bits_num)
     for _ in range(gates_num):
         controls_num = randint(0, bits_num - 2)
-        ids = sample(range(0, bits_num - 1), controls_num + 1)
+        ids = sample(range(0, bits_num), controls_num + 1)
         target = ids[0]
         controls = [] if len(ids) == 1 else ids[1:]
         circ.append(Gate((list(controls), target)))
@@ -200,3 +202,36 @@ def test_permute(random_circuit, random_permutations):
     for _, gate in enumerate(permuted_circuit.gates()):
         recreated_circuit.append(gate, inplace=True)
     assert permuted_circuit == recreated_circuit
+
+
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_permutations(bits_num):
+    circuit = Circuit(bits_num).cx(0, 1)
+    permutations = circuit.permutations()
+    assert len(permutations) == bits_num * (bits_num-1)
+
+    circuit = Circuit(bits_num).x(0)
+    permutations = circuit.permutations()
+    assert len(permutations) == bits_num
+
+    circuit = Circuit(bits_num).mcx([0, 1], 2)
+    permutations = circuit.permutations()
+    assert len(permutations) == bits_num * (bits_num - 1) * (bits_num - 2) / 2
+
+    circuit = Circuit(bits_num).cx(0, 1).x(1)
+    permutations = circuit.permutations()
+    assert len(permutations) == bits_num * (bits_num-1)
+
+    circuit = Circuit(bits_num).x(0).x(1)
+    permutations = circuit.permutations()
+    assert len(permutations) == bits_num * (bits_num-1)
+
+    circuit = Circuit(bits_num).mcx([0, 1], 2).mcx([0, 2], 1)
+    permutations = circuit.permutations()
+    assert len(permutations) == bits_num * (bits_num - 1) * (bits_num - 2)
+
+
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_rotations(random_circuit):
+    rotations = random_circuit.rotations()
+    assert len(rotations) <= len(random_circuit)
