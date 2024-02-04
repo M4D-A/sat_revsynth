@@ -1,5 +1,5 @@
 import pytest
-from random import randint, sample
+from random import randint, sample, shuffle
 from copy import copy
 from .circuit import Circuit, Gate, TruthTable
 
@@ -50,19 +50,16 @@ def empty_circuit(bits_num):
 @pytest.fixture
 def identity_tt(bits_num):
     return TruthTable(bits_num)
-#
-#
-# @pytest.fixture
-# def random_gate_list(bits_num):
-#     gates: list[Gate] = []
-#     gates_num = randint(2, 32)
-#     for _ in range(gates_num):
-#         controls_num = randint(0, bits_num - 2)
-#         ids = sample(range(0, bits_num - 1), controls_num + 1)
-#         target = ids[0]
-#         controls = [] if len(ids) == 1 else ids[1:]
-#         gates.append(Gate((list(controls), target)))
-#     return gates
+
+
+@pytest.fixture
+def random_permutations(bits_num):
+    permutation = list(range(bits_num))
+    shuffle(permutation)
+    inv_permutation = [0] * bits_num
+    for i, v in enumerate(permutation):
+        inv_permutation[v] = i
+    return (permutation, inv_permutation)
 
 
 @pytest.mark.parametrize("bits_num", bits_num_randomizer)
@@ -188,3 +185,18 @@ def test_rotate(random_circuit):
         assert shifted_gate == gate
     re_rotated_circuit = rotated_circuit.rotate(-shift, inplace=False)
     assert re_rotated_circuit == random_circuit
+
+
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_permute(random_circuit, random_permutations):
+    permutation, inv_permutation = random_permutations
+    permuted_circuit = random_circuit.permute(permutation, inplace=False)
+    assert permuted_circuit.tt() == random_circuit.tt().permute(
+        permutation, permute_input=True, inplace=False)
+    re_permuted_circuit = permuted_circuit.permute(inv_permutation, inplace=False)
+    assert re_permuted_circuit == random_circuit
+
+    recreated_circuit = Circuit(random_circuit.width())
+    for _, gate in enumerate(permuted_circuit.gates()):
+        recreated_circuit.append(gate, inplace=True)
+    assert permuted_circuit == recreated_circuit

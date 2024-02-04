@@ -27,7 +27,12 @@ class Circuit:
         return new
 
     def __str__(self) -> str:
-        return f"width = {self._width} gates_num = {len(self._gates)}\n{self._tt}"
+        header = f"width = {self._width} gates_num = {len(self._gates)}\n"
+        gates = ""
+        for controls, target in self._gates:
+            gates += f"{str(controls)} -> {target}\n"
+        tt = f"{self._tt}"
+        return header + gates + tt
 
     def __len__(self) -> int:
         return len(self._gates)
@@ -97,6 +102,17 @@ class Circuit:
             new_tt.mcx(*gate)
         self._gates = new_gates
         self._tt = new_tt
+        return self
+
+    @inplace
+    def permute(self, permutation: list[int], **_) -> "Circuit":
+        new_gates: list[Gate] = []
+        for controls, target in self._gates:
+            new_target = permutation[target]
+            new_controls = sorted([permutation[c] for c in controls])
+            new_gates.append((new_controls, new_target))
+        self._gates = new_gates
+        self._tt.permute(permutation, permute_input=True, inplace=True)
         return self
 
     def gate_swappable(self, index, ignore_identical: bool = True) -> bool:
