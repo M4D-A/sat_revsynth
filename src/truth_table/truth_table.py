@@ -102,13 +102,19 @@ class TruthTable:
         return self
 
     @inplace
-    def permute(self, permutation: list[int], **_) -> "TruthTable":
+    def permute(self, permutation: list[int], permute_input: bool = True, **_) -> "TruthTable":
         assert len(permutation) == self._bits_num
         assert sorted(permutation) == list(range(self._bits_num))
+
+        if permute_input:
+            reordering = TruthTable(self._bits_num).permute(permutation, False).values()
+        else:
+            reordering = list(range(2**self._bits_num))
+
         new_bits = [[0] * self._bits_num for _ in range(len(self))]
         for i in range(self._bits_num):
             new_i = permutation[i]
             for r_id, row in enumerate(self._bits):
-                new_bits[r_id][new_i] = row[i]
+                new_bits[reordering[r_id]][new_i] = row[i]
         self._bits = new_bits
         return self
