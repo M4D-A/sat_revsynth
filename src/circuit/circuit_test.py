@@ -2,7 +2,6 @@ import pytest
 from random import randint, sample, shuffle
 from copy import copy
 from .circuit import Circuit, Gate, TruthTable
-from math import factorial
 
 
 max_bits_num = 5
@@ -250,7 +249,58 @@ def test_rotations(random_circuit):
 
 
 def test_unroll():
-    circuit = Circuit(2).cx(0, 1).x(1).x(1).cx(0, 1)
+    circuit = Circuit(2)
+    circuit.x(0).x(1)
     swap_space = circuit.unroll()
-    for c in swap_space:
-        print(c)
+    assert len(swap_space) == 2
+    assert circuit in swap_space
+    assert Circuit(2).x(1).x(0) in swap_space
+
+    circuit = Circuit(2)
+    circuit.x(0).cx(0, 1)
+    swap_space = circuit.unroll()
+    assert len(swap_space) == 4
+    assert circuit in swap_space
+    assert Circuit(2).x(1).cx(1, 0)
+    assert Circuit(2).cx(0, 1).x(0) in swap_space
+    assert Circuit(2).cx(1, 0).x(1) in swap_space
+
+    circuit = Circuit(3)
+    circuit.x(0).mcx([1, 2], 0).x(0)
+    swap_space = circuit.unroll()
+    assert len(swap_space) == 9
+    assert circuit in swap_space
+    circuit.mcx([1, 2], 0).x(0).x(0)
+    circuit.x(1).mcx([2, 0], 1).x(1)
+    circuit.x(2).x(2).mcx([1, 0], 2)
+
+    circuit = Circuit(3)
+    circuit.x(1).mcx([1, 2], 0).x(2)
+    swap_space = circuit.unroll()
+    assert len(swap_space) == 18
+    assert circuit in swap_space
+    circuit.x(2).mcx([1, 2], 0).x(1)
+    circuit.x(2).x(1).mcx([1, 2], 0)
+    circuit.x(0).mcx([0, 1], 2).x(1)
+
+    circuit = Circuit(2)
+    circuit.cx(0, 1).x(0).cx(0, 1).x(0).x(1)
+    swap_space = circuit.unroll()
+    assert len(swap_space) == 20
+    assert circuit in swap_space
+    circuit.cx(0, 1).x(0).x(1).cx(0, 1).x(0)
+    circuit.cx(1, 0).x(1).cx(1, 0).x(1).x(0)
+    circuit.cx(0, 1).x(0).cx(0, 1).x(0).x(1)
+    circuit.x(1).x(0).cx(0, 1).x(0).cx(0, 1)
+
+    circuit = Circuit(3)
+    circuit.cx(1, 2).cx(0, 1).cx(1, 2).cx(0, 2).cx(0, 1)
+    swap_space = circuit.unroll()
+    assert len(swap_space) == 60
+    assert circuit in swap_space
+
+    circuit = Circuit(3)
+    circuit.cx(0, 2).mcx([0, 1], 2).x(1).mcx([0, 1], 2).x(1)
+    swap_space = circuit.unroll()
+    assert len(swap_space) == 60
+    assert circuit in swap_space
