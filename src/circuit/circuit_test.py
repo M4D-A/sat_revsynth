@@ -4,7 +4,8 @@ from copy import copy
 from .circuit import Circuit, Gate, TruthTable
 
 
-max_bits_num = 4
+max_bits_num = 5
+max_gates_num = 6
 epochs = 2**8
 bits_num_randomizer = list(randint(3, max_bits_num) for _ in range(epochs))
 
@@ -30,11 +31,11 @@ def mcx_params(bits_num):
 
 @pytest.fixture
 def random_circuit(bits_num):
-    gates_num = randint(2, 32)
+    gates_num = randint(2, max_gates_num)
     circ = Circuit(bits_num)
     for _ in range(gates_num):
         controls_num = randint(0, bits_num - 2)
-        ids = sample(range(0, bits_num - 1), controls_num + 1)
+        ids = sample(range(0, bits_num), controls_num + 1)
         target = ids[0]
         controls = [] if len(ids) == 1 else ids[1:]
         circ.append(Gate((list(controls), target)))
@@ -200,3 +201,106 @@ def test_permute(random_circuit, random_permutations):
     for _, gate in enumerate(permuted_circuit.gates()):
         recreated_circuit.append(gate, inplace=True)
     assert permuted_circuit == recreated_circuit
+
+
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_swap(random_circuit):
+    swap_id = randint(0, len(random_circuit) - 1)
+    swapped = random_circuit.swap(swap_id, inplace=False)
+    assert len(swapped) == len(random_circuit)
+    assert swapped[swap_id] == random_circuit[(swap_id + 1) % len(swapped)]
+    assert random_circuit[swap_id] == swapped[(swap_id + 1) % len(swapped)]
+    for i, (gate_a, gate_b) in enumerate(zip(swapped, random_circuit)):
+        if i not in [swap_id, (swap_id + 1) % len(swapped)]:
+            assert gate_a == gate_b
+
+
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_permutations(bits_num):
+    circuit = Circuit(bits_num).cx(0, 1)
+    permutations = circuit.permutations()
+    assert len(permutations) == bits_num * (bits_num-1)
+
+    circuit = Circuit(bits_num).x(0)
+    permutations = circuit.permutations()
+    assert len(permutations) == bits_num
+
+    circuit = Circuit(bits_num).mcx([0, 1], 2)
+    permutations = circuit.permutations()
+    assert len(permutations) == bits_num * (bits_num - 1) * (bits_num - 2) / 2
+
+    circuit = Circuit(bits_num).cx(0, 1).x(1)
+    permutations = circuit.permutations()
+    assert len(permutations) == bits_num * (bits_num-1)
+
+    circuit = Circuit(bits_num).x(0).x(1)
+    permutations = circuit.permutations()
+    assert len(permutations) == bits_num * (bits_num-1)
+
+    circuit = Circuit(bits_num).mcx([0, 1], 2).mcx([0, 2], 1)
+    permutations = circuit.permutations()
+    assert len(permutations) == bits_num * (bits_num - 1) * (bits_num - 2)
+
+
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_rotations(random_circuit):
+    rotations = random_circuit.rotations()
+    assert len(rotations) <= len(random_circuit)
+
+
+def test_unroll():
+    circuit = Circuit(2)
+    circuit.x(0).x(1)
+    swap_space = circuit.unroll()
+    assert len(swap_space) == 2
+    assert circuit in swap_space
+    assert Circuit(2).x(1).x(0) in swap_space
+
+    circuit = Circuit(2)
+    circuit.x(0).cx(0, 1)
+    swap_space = circuit.unroll()
+    assert len(swap_space) == 4
+    assert circuit in swap_space
+    assert Circuit(2).x(1).cx(1, 0)
+    assert Circuit(2).cx(0, 1).x(0) in swap_space
+    assert Circuit(2).cx(1, 0).x(1) in swap_space
+
+    circuit = Circuit(3)
+    circuit.x(0).mcx([1, 2], 0).x(0)
+    swap_space = circuit.unroll()
+    assert len(swap_space) == 9
+    assert circuit in swap_space
+    circuit.mcx([1, 2], 0).x(0).x(0)
+    circuit.x(1).mcx([2, 0], 1).x(1)
+    circuit.x(2).x(2).mcx([1, 0], 2)
+
+    circuit = Circuit(3)
+    circuit.x(1).mcx([1, 2], 0).x(2)
+    swap_space = circuit.unroll()
+    assert len(swap_space) == 18
+    assert circuit in swap_space
+    circuit.x(2).mcx([1, 2], 0).x(1)
+    circuit.x(2).x(1).mcx([1, 2], 0)
+    circuit.x(0).mcx([0, 1], 2).x(1)
+
+    circuit = Circuit(2)
+    circuit.cx(0, 1).x(0).cx(0, 1).x(0).x(1)
+    swap_space = circuit.unroll()
+    assert len(swap_space) == 20
+    assert circuit in swap_space
+    circuit.cx(0, 1).x(0).x(1).cx(0, 1).x(0)
+    circuit.cx(1, 0).x(1).cx(1, 0).x(1).x(0)
+    circuit.cx(0, 1).x(0).cx(0, 1).x(0).x(1)
+    circuit.x(1).x(0).cx(0, 1).x(0).cx(0, 1)
+
+    circuit = Circuit(3)
+    circuit.cx(1, 2).cx(0, 1).cx(1, 2).cx(0, 2).cx(0, 1)
+    swap_space = circuit.unroll()
+    assert len(swap_space) == 60
+    assert circuit in swap_space
+
+    circuit = Circuit(3)
+    circuit.cx(0, 2).mcx([0, 1], 2).x(1).mcx([0, 1], 2).x(1)
+    swap_space = circuit.unroll()
+    assert len(swap_space) == 60
+    assert circuit in swap_space
