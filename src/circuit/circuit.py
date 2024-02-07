@@ -136,6 +136,26 @@ class Circuit:
         self._gates[id], self._gates[next_id] = self._gates[next_id], self._gates[id]
         return self
 
+    @inplace
+    def add_empty_line(self, line_id: int, **_) -> "Circuit":
+        assert 0 <= line_id and line_id <= self._width
+        for i, (controls, target) in enumerate(self._gates):
+            new_target = target if line_id > target else target + 1
+            new_controls = [(c if line_id > c else c + 1) for c in controls]
+            self._gates[i] = (new_controls, new_target)
+        self._width += 1
+        return self
+
+    @inplace
+    def add_full_line(self, line_id: int, **_) -> "Circuit":
+        assert 0 <= line_id and line_id <= self._width
+        for i, (controls, target) in enumerate(self._gates):
+            new_target = target if line_id > target else target + 1
+            new_controls = [(c if line_id > c else c + 1) for c in controls] + [line_id]
+            self._gates[i] = (sorted(new_controls), new_target)
+        self._width += 1
+        return self
+
     def rotations(self) -> list["Circuit"]:
         equivalents = [self.rotate(s, inplace=False) for s in range(len(self))]
         unique = self.filter_duplicates(equivalents)
@@ -199,4 +219,14 @@ class Circuit:
         equivalents = temp_list
 
         unique = self.filter_duplicates(equivalents)
+        return unique
+
+    def empty_line_extensions(self) -> list["Circuit"]:
+        extensions = [self.add_empty_line(i, inplace=False) for i in range(self._width + 1)]
+        unique = self.filter_duplicates(extensions)
+        return unique
+
+    def full_line_extensions(self) -> list["Circuit"]:
+        extensions = [self.add_full_line(i, inplace=False) for i in range(self._width + 1)]
+        unique = self.filter_duplicates(extensions)
         return unique

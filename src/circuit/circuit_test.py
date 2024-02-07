@@ -304,3 +304,38 @@ def test_unroll():
     swap_space = circuit.unroll()
     assert len(swap_space) == 60
     assert circuit in swap_space
+
+
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_empty_lines(random_circuit):
+    extensions = random_circuit.empty_line_extensions()
+    assert len(extensions) <= random_circuit.width() + 1
+    for ext in extensions:
+        assert len(ext) == len(random_circuit)
+        assert ext.width() == random_circuit.width() + 1
+        gates = random_circuit.gates()
+        ext_gates = ext.gates()
+        for (ext_controls, ext_target), (controls, target) in zip(ext_gates, gates):
+            assert len(ext_controls) == len(controls)
+            assert ext_target in [target, target + 1]
+            for c, ext_c in zip(controls, ext_controls):
+                assert ext_c in [c, c + 1]
+
+
+@pytest.mark.parametrize("bits_num", bits_num_randomizer)
+def test_full_lines(random_circuit):
+    extensions = random_circuit.full_line_extensions()
+    assert len(extensions) <= random_circuit.width() + 1
+    for ext in extensions:
+        assert len(ext) == len(random_circuit)
+        assert ext.width() == random_circuit.width() + 1
+        gates = random_circuit.gates()
+        ext_gates = ext.gates()
+        for (ext_controls, ext_target), (controls, target) in zip(ext_gates, gates):
+            assert len(ext_controls) == len(controls) + 1
+            assert ext_target in [target, target + 1]
+            count = 0
+            for c, ext_c in zip(controls, ext_controls):
+                if ext_c not in [c, c - 1]:
+                    count += 1
+            assert count in [0, 1]
