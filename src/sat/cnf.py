@@ -111,9 +111,12 @@ class CNF():
         name = str(pool.obj(abs_id))
         return Literal(name, id)
 
-    def set_literal(self, literal: Literal):
+    def set_literal(self, literal: Literal, value: bool | None = None):
         assert self.verify_literals([literal])
         lval = literal.value()
+        if value is not None:
+            sign = 1 if value else -1
+            lval = sign * abs(lval)
         self._cnf.append([lval])
         return self
 

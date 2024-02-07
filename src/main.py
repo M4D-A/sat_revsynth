@@ -1,11 +1,6 @@
-from sat import CNF
-from sat import Solver
-
-cnf = CNF()
-a = cnf.reserve_name("a")
-b = cnf.reserve_name("b")
-cnf.equals(a, b)
-
-s = Solver("kissat")
-model = s.solve(cnf)
-print(model)
+from truth_table.truth_table import TruthTable
+from sat.solver import Solver
+from sat.cnf import CNF
+from circuit.circuit import Circuit
+t = TruthTable(3)
+print(t)
