@@ -1,0 +1,5 @@
+src/utils/
+src/truthtable/
+src/circuit/
+src/sat/
+src/sythesizer/
