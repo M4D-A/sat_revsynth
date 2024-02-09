@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from random import shuffle
-from utils.inplace import inplace
+from inplace import inplace
 from copy import copy
 
 
