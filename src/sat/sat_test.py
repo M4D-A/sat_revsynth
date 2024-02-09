@@ -3,8 +3,8 @@ from random import randint, sample
 from itertools import product
 from functools import reduce
 from copy import deepcopy
-from .cnf import CNF
-from .solver import Solver
+from sat.cnf import CNF
+from sat.solver import Solver
 
 
 solver_names = Solver.builtin_solvers.keys()

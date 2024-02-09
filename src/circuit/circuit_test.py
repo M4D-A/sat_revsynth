@@ -1,7 +1,7 @@
 import pytest
 from random import randint, sample, shuffle
 from copy import copy
-from .circuit import Circuit, Gate, TruthTable
+from circuit import Circuit, Gate, TruthTable
 
 
 max_bits_num = 5
