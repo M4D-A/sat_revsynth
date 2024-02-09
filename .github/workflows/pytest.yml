@@ -31,7 +31,7 @@ jobs:
     - name: Cache venv
       uses: actions/cache@v3
       with:
-        key: venv-${{ runner.os }}-${{ steps.setup_python.outputs.python-version}}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements_local.txt') }}
+        key: venv-${{ runner.os }}-${{ steps.setup_python.outputs.python-version}}-${{ hashFiles('requirements.txt') }}
         path: .venv
 
     - name: Install dependencies
@@ -41,7 +41,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        if [ -f requirements_local.txt ]; then pip install -e -r requirements_local.txt; fi
         echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
         echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
 
