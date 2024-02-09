@@ -4,7 +4,7 @@ with catch_warnings():
     from qiskit import QuantumCircuit
 from copy import copy, deepcopy
 from itertools import permutations
-from truth_table import TruthTable
+from truthtable.truthtable import TruthTable
 from inplace import inplace
 
 Gate = tuple[list[int], int]  # Gate in integer representation

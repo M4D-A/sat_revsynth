@@ -1,5 +1,5 @@
 from circuit.circuit import Circuit
-from truth_table.truth_table import TruthTable
+from truthtable.truthtable import TruthTable
 from sat.cnf import CNF
 from sat.solver import Solver
 from itertools import product

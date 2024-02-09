@@ -1,11 +1,11 @@
-from inplace import inplace
-from truth_table.truth_table import TruthTable
-from cnf import CNF
+from utils.inplace import inplace
+from truthtable.truthtable import TruthTable
+# from cnf import CNF
 t = TruthTable(2, [2, 1, 3, 0])
 print(t)
-cnf = CNF()
-cnf.reserve_name("abc")
-print(cnf)
+# cnf = CNF()
+# cnf.reserve_name("abc")
+# print(cnf)
 
 # from sat.solver import Solver
 # from sat.cnf import CNF

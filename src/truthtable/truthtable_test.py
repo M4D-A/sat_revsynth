@@ -1,7 +1,7 @@
 import pytest
 from random import randint, sample, shuffle
 from copy import copy
-from truth_table import TruthTable
+from truthtable.truthtable import TruthTable
 
 
 max_bits_size = 8
