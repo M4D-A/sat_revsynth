@@ -2,8 +2,8 @@ wheel
 pytest
 python-sat == 0.1.8.dev10
 qiskit
--e src/utils/
--e src/truthtable/
--e src/circuit/
--e src/sat/
--e src/sythesizer/
+-e ./src/utils/
+-e ./src/truthtable/
+-e ./src/circuit/
+-e ./src/sat/
+-e ./src/sythesizer/
