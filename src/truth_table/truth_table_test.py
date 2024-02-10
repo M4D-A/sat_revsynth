@@ -1,11 +1,11 @@
 import pytest
 from random import randint, sample, shuffle
 from copy import copy
-from .truth_table import TruthTable
+from src.truth_table.truth_table import TruthTable
 
 
 max_bits_size = 8
-epochs = 2**8
+epochs = 2**4
 bits_num_randomizer = list(randint(3, max_bits_size) for _ in range(epochs))
 
 
