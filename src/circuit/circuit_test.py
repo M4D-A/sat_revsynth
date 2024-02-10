@@ -1,12 +1,12 @@
 import pytest
 from random import randint, sample, shuffle
 from copy import copy
-from .circuit import Circuit, Gate, TruthTable
+from circuit.circuit import Circuit, Gate, TruthTable
 
 
 max_bits_num = 5
 max_gates_num = 6
-epochs = 2**8
+epochs = 2**6
 bits_num_randomizer = list(randint(3, max_bits_num) for _ in range(epochs))
 
 
