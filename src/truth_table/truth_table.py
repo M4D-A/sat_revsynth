@@ -53,6 +53,9 @@ class TruthTable:
         rows = "\n".join([str(i) + ": " + str(row) for i, row in zip(self.values(), self._bits)])
         return header + rows
 
+    def __getitem__(self, key):
+        return self._bits[key]
+
     @classmethod
     def row_to_value(cls, row: list[int]) -> int:
         value = 0
