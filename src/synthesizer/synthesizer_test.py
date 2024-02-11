@@ -1,8 +1,5 @@
 import pytest
 from random import randint, sample
-from itertools import product
-from functools import reduce
-from copy import deepcopy
 from sat.solver import Solver
 from truth_table.truth_table import TruthTable
 from synthesizer.synthesizer import Synthesizer
