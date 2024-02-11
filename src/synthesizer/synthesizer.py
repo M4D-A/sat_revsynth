@@ -44,20 +44,17 @@ class Synthesizer:
         width_iter = range(self._width)
         gc_iter = range(self._gate_count)
         input_iter = range(self._words)
-        print(f"{self._width = } {self._gate_count = } {self._words = }")
 
         # i - qubit index, j - layer index, w - input word index
         controls = [[cnf.reserve_name(f"c_{i}_{j}") for i in width_iter] for j in gc_iter]
         targets = [[cnf.reserve_name(f"t_{i}_{j}") for i in width_iter] for j in gc_iter]
-        print(targets)
-
-        data_bits = [[[cnf.reserve_name(f"d_{i}_{j}_{w}") for i in width_iter]
-                      for j in range(self._gate_count+1)] for w in input_iter]
-        switch_bits = [[[cnf.reserve_name(f"s_{i}_{j}_{w}") for i in width_iter]
-                        for j in gc_iter] for w in input_iter]
-        add_bits = [[cnf.reserve_name(f"a_{j}_{w}") for j in gc_iter] for w in input_iter]
         or_bits = [[[cnf.reserve_name(f"o_{i}_{j}_{w}") for i in width_iter]
                     for j in gc_iter] for w in input_iter]
+        data_bits = [[[cnf.reserve_name(f"d_{i}_{j}_{w}") for i in width_iter]
+                      for j in range(self._gate_count+1)] for w in input_iter]
+        add_bits = [[cnf.reserve_name(f"a_{j}_{w}") for j in gc_iter] for w in input_iter]
+        switch_bits = [[[cnf.reserve_name(f"s_{i}_{j}_{w}") for i in width_iter]
+                        for j in gc_iter] for w in input_iter]
 
         # General circuit constraints
         # Single target per gate
@@ -66,7 +63,6 @@ class Synthesizer:
 
         # Target qubit cannot be a control qubit
         for i, j in product(width_iter, gc_iter):
-            print(f"{i=} {j=}")
             cnf.nand(targets[j][i], controls[j][i])
 
         # Data flow constraints
@@ -84,7 +80,7 @@ class Synthesizer:
             cnf.equals_and(switch_bits[w][j][i], [add_bits[w][j], targets[j][i]])
 
         # Data bit is the previous data bit xored with the switch bit
-        for i, j, w in product(width_iter, range(self._gate_count - 1), input_iter):
+        for i, j, w in product(width_iter, gc_iter, input_iter):
             cnf.xor([data_bits[w][j+1][i], data_bits[w][j][i], switch_bits[w][j][i]])
 
         # Input/Output edge constraints
@@ -107,13 +103,10 @@ class Synthesizer:
             self.circuit = None
             return self.circuit
         circuit = Circuit(self._width)
-        print(self.solution)
         for j in gc_iter:
             targets = [i for i in width_iter if self.solution[f"t_{i}_{j}"]]
             controls = [i for i in width_iter if self.solution[f"c_{i}_{j}"]]
-            print(targets, controls)
             assert len(targets) == 1
             circuit.append((controls, targets[0]))
         self._circuit = circuit
-        print(self._circuit.tt())
         return self._circuit
