@@ -3,7 +3,7 @@ from truth_table.truth_table import TruthTable
 from sat.cnf import CNF
 from sat.solver import Solver
 from itertools import product
-from functools import reduce
+# from functools import reduce
 
 # max_controls: int | None = None,
 # ancilla_num: int = 0,
@@ -20,7 +20,7 @@ class Synthesizer:
                  output: TruthTable,
                  gate_count: int,
                  solver: Solver,
-                 **kwargs
+                 # **kwargs
                  ):
         assert len(output) >= 2
         assert len(output) == pow(2, len(output[0]))
