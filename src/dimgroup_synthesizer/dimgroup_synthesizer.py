@@ -3,6 +3,8 @@ from synthesizer.synthesizer import Synthesizer
 from truth_table.truth_table import TruthTable
 from circuit.circuit import Circuit
 
+DimGroup = list[Circuit]
+
 
 class PartialSynthesiser:
     def __init__(self, width: int, gate_count: int):
