@@ -132,25 +132,12 @@ class CNF():
         return self
 
     def equals_and(self, literal_a: Literal, literals_b: list[Literal]):
-        # clause_len = self._max_clause_len
-        # if clause_len and clause_len <= 2:
-        #     raise ValueError(
-        #         "clause_len must be greater than 2 if set to True")
-        # if not clause_len or len(literals_b) <= clause_len - 1:
         lval_a = literal_a.value()
         self._cnf.append([lval_a] + [-b_elem.value()
                          for b_elem in literals_b])
         for b_elem in literals_b:
             lval_b = b_elem.value()
             self._cnf.append([-lval_a, lval_b])
-        # else:
-        #     _ = [b_elem.value() for b_elem in literals_b]
-        #     slice = literals_b[:clause_len - 1]
-        #     remainder = literals_b[clause_len - 1:]
-        #     aux_literal = self.reserve_name(f"A{self._v_counter}", True)
-        #     self._v_counter += 1
-        #     self.equals_and(aux_literal, slice)
-        #     self.equals_and(literal_a, [aux_literal] + remainder)
         return self
 
     def equals_or(self, literal_a: Literal, literals_b: list[Literal]):

@@ -102,68 +102,56 @@ class Circuit:
         self._tt = None
         return self
 
-    @inplace
-    def reverse(self, **_) -> "Circuit":
-        self._gates.reverse()
-        self._tt = None
-        return self
+    def reverse(self) -> "Circuit":
+        new = Circuit(self._width)
+        new._gates = deepcopy(self._gates)
+        new._gates.reverse()
+        return new
 
-    @inplace
-    def rotate(self, shift: int, **_) -> "Circuit":
+    def rotate(self, shift: int) -> "Circuit":
         size = len(self)
         shift = (shift % size) + size % size
-        gates = self._gates
-        new_gates = gates[shift:] + gates[:shift]
-        self._gates = new_gates
-        self._tt = None
-        return self
+        new = Circuit(self._width)
+        new._gates = deepcopy(self._gates)
+        new._gates = new._gates[shift:] + new._gates[:shift]
+        return new
 
-    @inplace
-    def permute(self, permutation: list[int], **_) -> "Circuit":
+    def permute(self, permutation: list[int]) -> "Circuit":
         new_gates: list[Gate] = []
         for controls, target in self._gates:
             new_target = permutation[target]
             new_controls = sorted([permutation[c] for c in controls])
             new_gates.append((new_controls, new_target))
-        self._gates = new_gates
-        self._tt = None
-        return self
+        new = Circuit(self._width)
+        new._gates = new_gates
+        return new
 
-    @inplace
     def swap(self, id: int, **_) -> "Circuit":
         assert 0 <= id and id < len(self)
         next_id = (id + 1) % len(self)
-        self._gates[id], self._gates[next_id] = self._gates[next_id], self._gates[id]
-        return self
+        new = Circuit(self._width)
+        new._gates = deepcopy(self._gates)
+        new._gates[id], new._gates[next_id] = new._gates[next_id], new._gates[id]
+        return new
 
-    @inplace
-    def add_empty_line(self, line_id: int, **_) -> "Circuit":
-        assert 0 <= line_id and line_id <= self._width
-        for i, (controls, target) in enumerate(self._gates):
-            new_target = target if line_id > target else target + 1
-            new_controls = [(c if line_id > c else c + 1) for c in controls]
-            self._gates[i] = (new_controls, new_target)
-        self._width += 1
-        return self
-
-    @inplace
-    def add_full_line(self, line_id: int, **_) -> "Circuit":
-        assert 0 <= line_id and line_id <= self._width
-        for i, (controls, target) in enumerate(self._gates):
-            new_target = target if line_id > target else target + 1
-            new_controls = [(c if line_id > c else c + 1) for c in controls] + [line_id]
-            self._gates[i] = (sorted(new_controls), new_target)
-        self._width += 1
-        return self
+    # @inplace
+    # def add_full_line(self, line_id: int, **_) -> "Circuit":
+    #     assert 0 <= line_id and line_id <= self._width
+    #     for i, (controls, target) in enumerate(self._gates):
+    #         new_target = target if line_id > target else target + 1
+    #         new_controls = [(c if line_id > c else c + 1) for c in controls] + [line_id]
+    #         self._gates[i] = (sorted(new_controls), new_target)
+    #     self._width += 1
+    #     return self
 
     def rotations(self) -> list["Circuit"]:
-        equivalents = [self.rotate(s, inplace=False) for s in range(len(self))]
+        equivalents = [self.rotate(s) for s in range(len(self))]
         unique = self.filter_duplicates(equivalents)
         return unique
 
     def permutations(self) -> list["Circuit"]:
         all_permutations = permutations(list(range(self._width)))
-        equivalents = [self.permute(list(perm), inplace=False) for perm in all_permutations]
+        equivalents = [self.permute(list(perm)) for perm in all_permutations]
         unique = self.filter_duplicates(equivalents)
         return unique
 
@@ -209,7 +197,7 @@ class Circuit:
             temp_list += rotations
         equivalents = temp_list
 
-        temp_list = [circuit.reverse(inplace=False) for circuit in equivalents]
+        temp_list = [circuit.reverse() for circuit in equivalents]
         equivalents += temp_list
         equivalents = self.filter_duplicates(equivalents)
 
@@ -221,12 +209,7 @@ class Circuit:
         unique = self.filter_duplicates(equivalents)
         return unique
 
-    def empty_line_extensions(self) -> list["Circuit"]:
-        extensions = [self.add_empty_line(i, inplace=False) for i in range(self._width + 1)]
-        unique = self.filter_duplicates(extensions)
-        return unique
-
-    def full_line_extensions(self) -> list["Circuit"]:
-        extensions = [self.add_full_line(i, inplace=False) for i in range(self._width + 1)]
-        unique = self.filter_duplicates(extensions)
-        return unique
+    # def full_line_extensions(self) -> list["Circuit"]:
+    #     extensions = [self.add_full_line(i) for i in range(self._width + 1)]
+    #     unique = self.filter_duplicates(extensions)
+    #     return unique
