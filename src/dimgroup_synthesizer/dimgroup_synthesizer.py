@@ -34,8 +34,8 @@ class DimGroupSynthesiser:
         self._width = width
         self._gate_count = gate_count
 
-    def synthesise(self, initial=list[Circuit] | None) -> list[Circuit]:
-        dim_group = initial if isinstance(initial, list) else []
+    def synthesise(self, initial: list[Circuit] | None = None) -> list[Circuit]:
+        dim_group = initial if initial is not None else []
         while True:
             ps = PartialSynthesiser(self._width, self._gate_count)
             for circuit in dim_group:
@@ -45,5 +45,5 @@ class DimGroupSynthesiser:
                 dim_group += dim_partial_group
             else:
                 break
-        unique = [qc for i, qc in enumerate(dim_group) if qc not in dim_group[:i]]
+        unique = Circuit.filter_duplicates(dim_group)
         return unique

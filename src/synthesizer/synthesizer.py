@@ -118,14 +118,15 @@ class Synthesizer:
         if self._circuit is None:
             line_iter = range(self._width)
             gate_iter = range(self._gate_count)
-            solution = self._solver.solve(self._cnf)
-            if not solution["sat"]:
+            sat, literals = self._solver.solve(self._cnf)
+            if not sat:
                 self.circuit = None
                 return self.circuit
             circuit = Circuit(self._width)
             for gid in gate_iter:
-                targets = [lid for lid in line_iter if solution[f"t_{lid}_{gid}"]]
-                controls = [lid for lid in line_iter if solution[f"c_{lid}_{gid}"]]
+                targets = [lid for lid in line_iter if self._targets[gid][lid].value() in literals]
+                controls = [lid for lid in line_iter if self._controls[gid][lid].value()
+                            in literals]
                 assert len(targets) == 1
                 circuit.append((controls, targets[0]))
             self._circuit = circuit

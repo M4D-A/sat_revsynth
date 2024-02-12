@@ -112,7 +112,6 @@ class CNF():
         return Literal(name, id)
 
     def set_literal(self, literal: Literal, value: bool | None = None):
-        assert self.verify_literals([literal])
         lval = literal.value()
         if value is not None:
             sign = 1 if value else -1
@@ -126,7 +125,6 @@ class CNF():
         return self
 
     def equals(self, literal_a: Literal, literal_b: Literal):
-        assert self.verify_literals([literal_a, literal_b])
         lval_a = literal_a.value()
         lval_b = literal_b.value()
         self._cnf.append([-lval_a, lval_b])
@@ -134,30 +132,28 @@ class CNF():
         return self
 
     def equals_and(self, literal_a: Literal, literals_b: list[Literal]):
-        assert self.verify_literals([literal_a] + literals_b)
-        clause_len = self._max_clause_len
-        if clause_len and clause_len <= 2:
-            raise ValueError(
-                "clause_len must be greater than 2 if set to True")
-        if not clause_len or len(literals_b) <= clause_len - 1:
-            lval_a = literal_a.value()
-            self._cnf.append([lval_a] + [-b_elem.value()
-                             for b_elem in literals_b])
-            for b_elem in literals_b:
-                lval_b = b_elem.value()
-                self._cnf.append([-lval_a, lval_b])
-        else:
-            _ = [b_elem.value() for b_elem in literals_b]
-            slice = literals_b[:clause_len - 1]
-            remainder = literals_b[clause_len - 1:]
-            aux_literal = self.reserve_name(f"A{self._v_counter}", True)
-            self._v_counter += 1
-            self.equals_and(aux_literal, slice)
-            self.equals_and(literal_a, [aux_literal] + remainder)
+        # clause_len = self._max_clause_len
+        # if clause_len and clause_len <= 2:
+        #     raise ValueError(
+        #         "clause_len must be greater than 2 if set to True")
+        # if not clause_len or len(literals_b) <= clause_len - 1:
+        lval_a = literal_a.value()
+        self._cnf.append([lval_a] + [-b_elem.value()
+                         for b_elem in literals_b])
+        for b_elem in literals_b:
+            lval_b = b_elem.value()
+            self._cnf.append([-lval_a, lval_b])
+        # else:
+        #     _ = [b_elem.value() for b_elem in literals_b]
+        #     slice = literals_b[:clause_len - 1]
+        #     remainder = literals_b[clause_len - 1:]
+        #     aux_literal = self.reserve_name(f"A{self._v_counter}", True)
+        #     self._v_counter += 1
+        #     self.equals_and(aux_literal, slice)
+        #     self.equals_and(literal_a, [aux_literal] + remainder)
         return self
 
     def equals_or(self, literal_a: Literal, literals_b: list[Literal]):
-        assert self.verify_literals([literal_a] + literals_b)
         clause_len = self._max_clause_len
         if clause_len and clause_len <= 2:
             raise ValueError(
@@ -180,7 +176,6 @@ class CNF():
         return self
 
     def xor(self, literals: list[Literal]):
-        assert self.verify_literals(literals)
         clause_len = self._max_clause_len
         if clause_len and clause_len <= 2:
             raise ValueError("split must be greater than 2 if set to True")
@@ -201,7 +196,6 @@ class CNF():
         return self
 
     def atleast(self, literals: list[Literal], lower_bound: int):
-        assert self.verify_literals(literals)
         ids = [lit.value() for lit in literals]
         clauses = CardEnc.atleast(
             ids,
@@ -213,7 +207,6 @@ class CNF():
         return self
 
     def atmost(self, literals: list[Literal], upper_bound: int):
-        assert self.verify_literals(literals)
         ids = [lit.value() for lit in literals]
         clauses = CardEnc.atmost(
             ids,
@@ -225,7 +218,6 @@ class CNF():
         return self
 
     def exactly(self, literals: list[Literal], upper_bound: int):
-        assert self.verify_literals(literals)
         ids = [lit.value() for lit in literals]
         clauses = CardEnc.equals(
             ids,
@@ -237,7 +229,6 @@ class CNF():
         return self
 
     def nand(self, literal_a: Literal, literal_b: Literal):
-        assert self.verify_literals([literal_a, literal_b])
         lval_a = literal_a.value()
         lval_b = literal_b.value()
         self._cnf.append([-lval_a, -lval_b])
