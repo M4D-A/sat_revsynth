@@ -2,6 +2,9 @@ from collections.abc import Iterable
 from pysat.formula import CNF as CNF_core, IDPool
 from pysat.card import CardEnc
 from itertools import product
+from timeit import default_timer as timer
+import threading
+import queue
 
 VarName = str
 
@@ -63,7 +66,43 @@ class CNF():
         return self._v_pool
 
     def to_file(self, file_name: str) -> None:
-        self._cnf.to_file(file_name)  # [BOTTLENECK]
+        clauses = self._cnf.clauses
+        cls_num = len(clauses)
+        buffer_size = 1024*1024
+        step = 2000
+        if cls_num > 10000:
+            def producer(out_q):
+                header = f"p cnf {self._cnf.nv} {cls_num}\n"
+                out_q.put(header)
+
+                for i in range(0, cls_num, step):
+                    clauses_slice = clauses[i: i + step]
+                    string = ' 0\n'.join([' '.join([str(lit) for lit in cl])
+                                          for cl in clauses_slice]) + ' 0\n'
+                    out_q.put(string)
+                out_q.put(None)
+
+            def consumer(in_q, out_file):
+                while True:
+                    item = in_q.get()
+                    if item is None:
+                        break
+                    out_file.write(item)
+
+            q = queue.Queue()
+            with open(file_name, 'w', buffering=buffer_size) as f:
+                t1 = threading.Thread(target=producer, args=(q,))
+                t2 = threading.Thread(target=consumer, args=(q, f))
+                t1.start()
+                t2.start()
+                t1.join()
+                t2.join()
+        else:
+            header = f"p cnf {self._cnf.nv} {len(self._cnf.clauses)}\n"
+            string = ' 0\n'.join([' '.join([str(lit) for lit in cl])
+                                 for cl in self._cnf.clauses]) + ' 0\n'
+            with open(file_name, "w", buffering=buffer_size) as fp:
+                fp.write(header + string)
 
     def check_name(self, name: VarName) -> bool:
         return name in self._v_pool.obj2id.keys()

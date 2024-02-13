@@ -1,7 +1,7 @@
 from collection_synthesizer.collection_synthesizer import CollectionSynthesizer
 from dimgroup_synthesizer.dimgroup_synthesizer import DimGroup
 
-cs = CollectionSynthesizer(4, 5)
+cs = CollectionSynthesizer(3, 6)
 collection = cs.synthesize()
 
 for width, width_subcollection in enumerate(collection):
