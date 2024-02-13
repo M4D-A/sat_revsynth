@@ -264,5 +264,5 @@ class CNF():
 
     def exclude_by_values(self, literals: list[int]):
         clause = [-lit for lit in literals]
-        self._cnf.append(clause)
+        self._cnf.clauses.append(clause)
         return self
