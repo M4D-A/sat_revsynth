@@ -19,7 +19,6 @@ class CollectionSynthesizer:
             self._collection.append(set_width_subcollection)
             for gc in range(2, self._max_gate_count + 1):
                 trivial = self._construct_from_previous(width, gc)
-                trivial = []
                 print(width, gc, len(trivial))
                 dgs = DimGroupSynthesiser(width, gc)
                 dimgroup = dgs.synthesise(trivial)
@@ -27,15 +26,14 @@ class CollectionSynthesizer:
         return self._collection
 
     def _construct_from_previous(self, width: int, gc: int) -> list[Circuit]:
-        if gc < 4:
-            return []
         generated = []
-        for left_gc in range(2, gc - 1):
-            right_gc = gc - left_gc
-            left_dimgroup = self._collection[width][left_gc]
-            right_dimgroup = self._collection[width][right_gc]
-            for left_gate, right_gate in product(left_dimgroup, right_dimgroup):
-                generated.append(left_gate + right_gate)
+        if gc >= 4:
+            for left_gc in range(2, gc - 1):
+                right_gc = gc - left_gc
+                left_dimgroup = self._collection[width][left_gc]
+                right_dimgroup = self._collection[width][right_gc]
+                for left_gate, right_gate in product(left_dimgroup, right_dimgroup):
+                    generated.append(left_gate + right_gate)
         generated = Circuit.filter_duplicates(generated)
         unrolled = []
         for circuit in generated:
