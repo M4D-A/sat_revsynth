@@ -42,10 +42,6 @@ class Literal:
 
 
 class CNF():
-    app_time = 0.0
-    lcomp_time = 0.0
-    ex_time = 0.0
-
     def __init__(self):
         self._cnf = CNF_core()
         self._v_pool = IDPool(start_from=1)
@@ -69,46 +65,18 @@ class CNF():
         return self._v_pool
 
     def to_file(self, file_name: str) -> None:
-        clauses = self._cnf.clauses
-        cls_num = len(clauses)
         buffer_size = 1024*1024
-        step = 2000
-        if cls_num > 10000:
-            def producer(out_q):
-                header = f"p cnf {self._cnf.nv} {cls_num}\n"
-                out_q.put(header)
-
-                for i in range(0, cls_num, step):
-                    clauses_slice = clauses[i: i + step]
-                    string = ' 0\n'.join([' '.join([str(lit) for lit in cl])
-                                          for cl in clauses_slice]) + ' 0\n'
-                    out_q.put(string)
-                out_q.put(None)
-
-            def consumer(in_q, out_file):
-                while True:
-                    item = in_q.get()
-                    if item is None:
-                        break
-                    out_file.write(item)
-
-            q = queue.Queue()
-            with open(file_name, 'w', buffering=buffer_size) as f:
-                t1 = threading.Thread(target=producer, args=(q,))
-                t2 = threading.Thread(target=consumer, args=(q, f))
-                t1.start()
-                t2.start()
-                t1.join()
-                t2.join()
-        else:
-            header = f"p cnf {self._cnf.nv} {len(self._cnf.clauses)}\n"
-            string = ' 0\n'.join([' '.join([str(lit) for lit in cl])
-                                 for cl in self._cnf.clauses]) + ' 0\n'
-            with open(file_name, "w", buffering=buffer_size) as fp:
-                fp.write(header + string)
+        header = f"p cnf {self._cnf.nv} {len(self._cnf.clauses)}\n"
+        string = ' 0\n'.join([' '.join([str(lit) for lit in cl])
+                             for cl in self._cnf.clauses]) + ' 0\n'
+        with open(file_name, "w", buffering=buffer_size) as fp:
+            fp.write(header + string)
 
     def to_dimacs(self):
-        return self._cnf.to_dimacs()
+        header_lines = [f"p cnf {self._cnf.nv} {len(self._cnf.clauses)}"]
+        clause_lines = [" ".join(map(str, clause)) + " 0" for clause in self._cnf.clauses]
+        lines = "\n".join(header_lines + clause_lines) + "\n"
+        return lines
 
     def check_name(self, name: VarName) -> bool:
         return name in self._v_pool.obj2id.keys()
