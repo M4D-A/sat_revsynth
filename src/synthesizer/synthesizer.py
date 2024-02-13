@@ -83,25 +83,27 @@ class Synthesizer:
 
         return cnf, controls, targets
 
-    def _gate_exclusion_list(self, layer: int, gate: Gate) -> list[Literal]:
+    def _gate_exclusion_list(self, layer: int, gate: Gate) -> list[int]:
         controls, target = gate
         assert layer < self._gate_count
         assert all([0 <= c and c < self._width] for c in controls)
         assert 0 <= target and target < self._width
-        exclusion_list: list[Literal] = []
+        exclusion_list: list[int] = []
         for i in range(self._width):
-            c_literal = self._controls[layer][i] if i in controls else -self._controls[layer][i]
-            t_literal = self._targets[layer][i] if i == target else -self._targets[layer][i]
+            c_literal = self._controls[layer][i].value()
+            c_literal = c_literal if i in controls else -c_literal
+            t_literal = self._targets[layer][i].value()
+            t_literal = t_literal if i == target else -t_literal
             exclusion_list += [c_literal, t_literal]
         return exclusion_list
 
     def exclude_subcircuit(self, cirucit: Circuit, shift: int = 0) -> "Synthesizer":
         gates = cirucit.gates()
-        exclusion_list = []
+        exclusion_list: list[int] = []
         for layer, gate in enumerate(gates):
             targeted_layer = (layer + shift) % self._gate_count
             exclusion_list += self._gate_exclusion_list(targeted_layer, gate)
-        self._cnf.exclude(exclusion_list)
+        self._cnf.exclude_by_values(exclusion_list)
         return self
 
     def disable_empty_lines(self) -> "Synthesizer":

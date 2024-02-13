@@ -43,6 +43,10 @@ class Literal:
 
 
 class CNF():
+    app_time = 0.0
+    lcomp_time = 0.0
+    ex_time = 0.0
+
     def __init__(self):
         self._cnf = CNF_core()
         self._v_pool = IDPool(start_from=1)
@@ -172,9 +176,15 @@ class CNF():
 
     def equals_and(self, literal_a: Literal, literals_b: list[Literal]):
         lval_a = literal_a.value()
-        self._cnf.append([lval_a] + [-b_elem.value()
+        self._cnf.append([lval_a] + [-(b_elem.value())
                          for b_elem in literals_b])
         new_clauses = [[-lval_a, b_elem.value()] for b_elem in literals_b]
+        self._cnf.clauses += new_clauses
+        return self
+
+    def equals_and_by_values(self, literal_a: int, literals_b: list[int]):
+        header_clauses = [[literal_a] + [-b_elem for b_elem in literals_b]]
+        new_clauses = header_clauses + [[-literal_a, b_elem] for b_elem in literals_b]
         self._cnf.clauses += new_clauses
         return self
 
@@ -249,5 +259,12 @@ class CNF():
         aux_literal = self.reserve_name(f"A{self._v_counter}", True)
         self._v_counter += 1
         self.equals_and(aux_literal, literals)
+        self.set_literal(-aux_literal)
+        return self
+
+    def exclude_by_values(self, literals: list[int]):
+        aux_literal = self.reserve_name(f"A{self._v_counter}", True)
+        self._v_counter += 1
+        self.equals_and_by_values(aux_literal.value(), literals)
         self.set_literal(-aux_literal)
         return self
