@@ -34,7 +34,6 @@ class CollectionSynthesizer:
                 right_dimgroup = self._collection[width][right_gc]
                 for left_gate, right_gate in product(left_dimgroup, right_dimgroup):
                     generated.append(left_gate + right_gate)
-        generated = Circuit.filter_duplicates(generated)
         unrolled = []
         for circuit in generated:
             unrolled += circuit.unroll()

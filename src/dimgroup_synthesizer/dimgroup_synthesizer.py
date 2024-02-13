@@ -47,5 +47,4 @@ class DimGroupSynthesiser:
                 dim_group += dim_partial_group
             else:
                 break
-        unique = Circuit.filter_duplicates(dim_group)
-        return unique
+        return dim_group
