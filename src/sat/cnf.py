@@ -2,7 +2,6 @@ from collections.abc import Iterable
 from pysat.formula import CNF as CNF_core, IDPool
 from pysat.card import CardEnc
 from itertools import product
-from timeit import default_timer as timer
 import threading
 import queue
 
@@ -107,6 +106,9 @@ class CNF():
                                  for cl in self._cnf.clauses]) + ' 0\n'
             with open(file_name, "w", buffering=buffer_size) as fp:
                 fp.write(header + string)
+
+    def to_dimacs(self):
+        return self._cnf.to_dimacs()
 
     def check_name(self, name: VarName) -> bool:
         return name in self._v_pool.obj2id.keys()

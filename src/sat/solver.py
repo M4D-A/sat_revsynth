@@ -1,5 +1,4 @@
 from pysat.solvers import Cadical153, Lingeling, Glucose4
-from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
 from sat.cnf import CNF
 
@@ -51,10 +50,9 @@ class Solver:
         args = self.external_solvers[self.__name]
         if self.__args is not None:
             args += self.__args
-        with NamedTemporaryFile(dir=".") as f:
-            cnf.to_file(f.name)
-            p = Popen([self.__name, f.name, *args], stdout=PIPE, stderr=PIPE)
-            out, _ = p.communicate()
+        dimacs = cnf.to_dimacs()
+        p = Popen([self.__name, *args], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        out, _ = p.communicate(input=dimacs.encode())
         string = out.decode('utf-8').lower()
         if "unsat" in string:
             return (False, [])
