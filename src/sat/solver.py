@@ -3,6 +3,9 @@ from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
 from sat.cnf import CNF
 
+import threading
+import queue
+
 Solution = tuple[bool, list[int]]
 
 
@@ -51,9 +54,41 @@ class Solver:
         args = self.external_solvers[self.__name]
         if self.__args is not None:
             args += self.__args
-        dimacs = cnf.to_dimacs()
         p = Popen([self.__name, *args], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        out, _ = p.communicate(input=dimacs.encode())
+
+        clauses = cnf._cnf.clauses
+        cls_num = len(clauses)
+        step = 20000
+
+        def producer(out_q):
+            header = f"p cnf {cnf._cnf.nv} {cls_num}\n"
+            out_q.put(header)
+            for i in range(0, cls_num, step):
+                clauses_slice = clauses[i: i + step]
+                string = ' 0\n'.join([' '.join([str(lit) for lit in cl])
+                                      for cl in clauses_slice]) + ' 0\n'
+                out_q.put(string)
+            out_q.put(None)
+
+        def consumer(in_q, p):
+            while True:
+                item = in_q.get()
+                if item is None:
+                    break
+                p.stdin.write(item.encode())
+            p.stdin.close()
+
+        q = queue.Queue()
+        t1 = threading.Thread(target=producer, args=(q,))
+        t2 = threading.Thread(target=consumer, args=(q, p))
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
+        assert p.stdout is not None
+        out = p.stdout.read()
+
         string = out.decode('utf-8').lower()
         if "unsat" in string:
             return (False, [])
