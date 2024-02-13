@@ -114,6 +114,14 @@ class Synthesizer:
             self._cnf.atleast(line_variables, 1)
         return self
 
+    def disable_full_control_lines(self) -> "Synthesizer":
+        line_iter = range(self._width)
+        gate_iter = range(self._gate_count)
+        for lid in line_iter:
+            line_controls = [-self._controls[gid][lid] for gid in gate_iter]
+            self._cnf.atleast(line_controls, 1)
+        return self
+
     def solve(self):
         if self._circuit is None:
             line_iter = range(self._width)

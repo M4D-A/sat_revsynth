@@ -14,7 +14,9 @@ class PartialSynthesiser:
             TruthTable(width),
             self._gate_count,
             solver=Solver("kissat")
-        ).disable_empty_lines()
+        )
+        self._synthesizer.disable_empty_lines()
+        self._synthesizer.disable_full_control_lines()
 
     def synthesise(self) -> list[Circuit]:
         circuit = self._synthesizer.solve()
