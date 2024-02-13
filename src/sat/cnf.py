@@ -263,8 +263,6 @@ class CNF():
         return self
 
     def exclude_by_values(self, literals: list[int]):
-        aux_literal = self.reserve_name(f"A{self._v_counter}", True)
-        self._v_counter += 1
-        self.equals_and_by_values(aux_literal.value(), literals)
-        self.set_literal(-aux_literal)
+        clause = [-lit for lit in literals]
+        self._cnf.append(clause)
         return self

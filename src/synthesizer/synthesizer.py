@@ -97,13 +97,14 @@ class Synthesizer:
             exclusion_list += [c_literal, t_literal]
         return exclusion_list
 
-    def exclude_subcircuit(self, cirucit: Circuit, shift: int = 0) -> "Synthesizer":
-        gates = cirucit.gates()
-        exclusion_list: list[int] = []
-        for layer, gate in enumerate(gates):
-            targeted_layer = (layer + shift) % self._gate_count
-            exclusion_list += self._gate_exclusion_list(targeted_layer, gate)
-        self._cnf.exclude_by_values(exclusion_list)
+    def exclude_subcircuit(self, circuit: Circuit) -> "Synthesizer":
+        if circuit._exclusion_list is None:
+            gates = circuit.gates()
+            exclusion_list: list[int] = []
+            for layer, gate in enumerate(gates):
+                exclusion_list += self._gate_exclusion_list(layer, gate)
+            circuit._exclusion_list = exclusion_list
+        self._cnf.exclude_by_values(circuit._exclusion_list)
         return self
 
     def disable_empty_lines(self) -> "Synthesizer":

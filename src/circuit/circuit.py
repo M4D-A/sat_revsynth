@@ -15,6 +15,7 @@ class Circuit:
         self._width = bits_num
         self._tt: TruthTable | None = None
         self._gates: list[Gate] = []
+        self._exclusion_list: None | list[int] = None
 
     def width(self) -> int:
         return self._width
