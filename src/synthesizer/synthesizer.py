@@ -3,6 +3,7 @@ from truth_table.truth_table import TruthTable
 from sat.cnf import CNF, Literal
 from sat.solver import Solver
 from itertools import product
+from functools import reduce
 
 
 LiteralGrid = list[list[Literal]]
@@ -123,6 +124,13 @@ class Synthesizer:
         for lid in line_iter:
             line_controls = [-self._controls[gid][lid] for gid in gate_iter]
             self._cnf.atleast(line_controls, 1)
+        return self
+
+    def set_global_controls_num(self, controls_num: int):
+        assert 0 <= controls_num and controls_num <= (self._width - 1) * self._gate_count
+        self._global_controls_num = controls_num
+        all_controls = reduce(lambda x, y: x+y, self._controls)
+        self._cnf.exactly(all_controls, controls_num)
         return self
 
     def solve(self):

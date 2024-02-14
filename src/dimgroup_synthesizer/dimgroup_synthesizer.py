@@ -2,7 +2,7 @@ from sat.solver import Solver
 from synthesizer.synthesizer import Synthesizer
 from truth_table.truth_table import TruthTable
 from circuit.circuit import Circuit
-
+from multiprocess import Pool
 DimGroup = list[Circuit]
 
 
@@ -26,6 +26,10 @@ class PartialSynthesiser:
         else:
             return []
 
+    def restrict_global_controls(self, controls_num: int):
+        self._synthesizer.set_global_controls_num(controls_num)
+        return self
+
     def exclude_subcircuit(self, circuit: Circuit):
         self._synthesizer.exclude_subcircuit(circuit)
         return self
@@ -36,10 +40,12 @@ class DimGroupSynthesiser:
         self._width = width
         self._gate_count = gate_count
 
-    def synthesise(self, initial: list[Circuit] | None = None) -> list[Circuit]:
+    def synthesise(self, initial: list[Circuit] | None = None, controls_num: int | None = None) -> list[Circuit]:
         dim_group = initial if initial is not None else []
         while True:
             ps = PartialSynthesiser(self._width, self._gate_count)
+            if controls_num is not None:
+                ps.restrict_global_controls(controls_num)
             for circuit in dim_group:
                 ps.exclude_subcircuit(circuit)
             dim_partial_group = ps.synthesise()
@@ -47,4 +53,18 @@ class DimGroupSynthesiser:
                 dim_group += dim_partial_group
             else:
                 break
+        return dim_group
+
+    def synthesize_mt(self, threads: int, initial: list[Circuit] | None = None):
+        width = self._width
+        gate_count = self._gate_count
+        controls_num_range = range(1) if width == 1 else range(2, (width - 1) * gate_count + 1)
+        def exec_synthesize(controls_num): return self.synthesise(initial, controls_num)
+
+        with Pool(threads) as p:
+            results = list(p.map(exec_synthesize, controls_num_range))
+
+        dim_group = []
+        for subgroup in results:
+            dim_group += subgroup
         return dim_group

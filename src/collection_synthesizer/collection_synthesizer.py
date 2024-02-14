@@ -19,9 +19,9 @@ class CollectionSynthesizer:
             self._collection.append(set_width_subcollection)
             for gc in range(2, self._max_gate_count + 1):
                 trivial = self._construct_from_previous(width, gc)
-                print(width, gc, len(trivial))
                 dgs = DimGroupSynthesiser(width, gc)
-                dimgroup = dgs.synthesise(trivial)
+                dimgroup = dgs.synthesize_mt(1, trivial)
+                print(f"({width}, {gc}) -- {len(trivial)} / {len(dimgroup)}")
                 set_width_subcollection.append(dimgroup)
         return self._collection
 
