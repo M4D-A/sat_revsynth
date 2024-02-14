@@ -1,8 +1,9 @@
-from truth_table.truth_table import TruthTable
-from sat.solver import Solver
-from synthesizer.synthesizer import Synthesizer
-from dimgroup_synthesizer.dimgroup_synthesizer import DimGroupSynthesiser
+from collection_synthesizer.collection_synthesizer import CollectionSynthesizer
 
-dgs = DimGroupSynthesiser(3, 4)
-circuits = dgs.synthesise()
-print(len(circuits))
+cs = CollectionSynthesizer(3, 10)
+collection = cs.synthesize()
+
+for width, width_subcollection in enumerate(collection):
+    for gc, dimgroup in enumerate(width_subcollection):
+        print(f"({width}, {gc}): {len(dimgroup)}")
+    print()

@@ -3,6 +3,8 @@ from synthesizer.synthesizer import Synthesizer
 from truth_table.truth_table import TruthTable
 from circuit.circuit import Circuit
 
+DimGroup = list[Circuit]
+
 
 class PartialSynthesiser:
     def __init__(self, width: int, gate_count: int):
@@ -12,7 +14,9 @@ class PartialSynthesiser:
             TruthTable(width),
             self._gate_count,
             solver=Solver("kissat")
-        ).disable_empty_lines()
+        )
+        self._synthesizer.disable_empty_lines()
+        self._synthesizer.disable_full_control_lines()
 
     def synthesise(self) -> list[Circuit]:
         circuit = self._synthesizer.solve()
@@ -32,8 +36,8 @@ class DimGroupSynthesiser:
         self._width = width
         self._gate_count = gate_count
 
-    def synthesise(self, initial=list[Circuit] | None) -> list[Circuit]:
-        dim_group = initial if isinstance(initial, list) else []
+    def synthesise(self, initial: list[Circuit] | None = None) -> list[Circuit]:
+        dim_group = initial if initial is not None else []
         while True:
             ps = PartialSynthesiser(self._width, self._gate_count)
             for circuit in dim_group:
@@ -43,5 +47,4 @@ class DimGroupSynthesiser:
                 dim_group += dim_partial_group
             else:
                 break
-        unique = [qc for i, qc in enumerate(dim_group) if qc not in dim_group[:i]]
-        return unique
+        return dim_group

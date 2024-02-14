@@ -33,7 +33,8 @@ def long_cnf():
 def test_equals_true(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.equals(a, b).set_literal(a)
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert model['sat']
     assert model[a.name()]
     assert model[b.name()]
@@ -44,7 +45,8 @@ def test_equals_true(triplet_cnf, solver):
 def test_equals_false(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.equals(a, b).set_literal(-b)
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert model['sat']
     assert not model[a.name()]
     assert not model[b.name()]
@@ -55,7 +57,8 @@ def test_equals_false(triplet_cnf, solver):
 def test_equals_unsat(triplet_cnf, solver):
     cnf, (a, b, _) = triplet_cnf
     cnf.equals(a, b).set_literals([a, -b])
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert not model['sat']
 
 
@@ -63,7 +66,8 @@ def test_equals_unsat(triplet_cnf, solver):
 def test_and_true(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.equals_and(a, [b, c]).set_literal(a)
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert model['sat']
     assert model[a.name()]
     assert model[b.name()]
@@ -74,7 +78,8 @@ def test_and_true(triplet_cnf, solver):
 def test_and_false(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.equals_and(a, [b, c]).set_literal(-a)
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert model['sat']
     assert not model[a.name()]
     assert not model[b.name()] or not model[c.name()]
@@ -84,7 +89,8 @@ def test_and_false(triplet_cnf, solver):
 def test_and_unsat(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.equals_and(a, [b, c]).set_literals([a, -b])
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert not model['sat']
 
 
@@ -92,7 +98,8 @@ def test_and_unsat(triplet_cnf, solver):
 def test_and_true_long(long_cnf, solver):
     cnf, primary, literals = long_cnf
     cnf.equals_and(primary, literals).set_literal(primary)
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert model['sat']
     assert model[primary.name()]
     assert all(model[lit.name()] for lit in literals)
@@ -102,7 +109,8 @@ def test_and_true_long(long_cnf, solver):
 def test_and_false_long(long_cnf, solver):
     cnf, primary, literals = long_cnf
     cnf.equals_and(primary, literals).set_literal(-primary)
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert model['sat']
     assert not model[primary.name()]
     assert any(not model[lit.name()] for lit in literals)
@@ -113,7 +121,8 @@ def test_and_unsat_long(long_cnf, solver):
     for solver, _ in product(solvers, epochs):
         cnf, primary, literals = long_cnf
         cnf.equals_and(primary, literals).set_literals([primary, -literals[0]])
-        model = solver.solve(cnf)
+        solution = solver.solve(cnf)
+        model = cnf.make_dict_model(solution)
         assert not model['sat']
 
 
@@ -121,7 +130,8 @@ def test_and_unsat_long(long_cnf, solver):
 def test_or_true(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.equals_or(a, [b, c]).set_literal(a)
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert model['sat']
     assert model[a.name()]
     assert model[b.name()] or model[c.name()]
@@ -131,7 +141,8 @@ def test_or_true(triplet_cnf, solver):
 def test_or_false(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.equals_or(a, [b, c]).set_literal(-a)
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert model['sat']
     assert not model[a.name()]
     assert not model[b.name()]
@@ -142,7 +153,8 @@ def test_or_false(triplet_cnf, solver):
 def test_or_unsat(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.equals_or(a, [b, c]).set_literals([-a, b])
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert not model['sat']
 
 
@@ -150,7 +162,8 @@ def test_or_unsat(triplet_cnf, solver):
 def test_or_true_long(long_cnf, solver):
     cnf, primary, literals = long_cnf
     cnf.equals_or(primary, literals).set_literal(primary)
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert model['sat']
     assert model[primary.name()]
     assert any(model[lit.name()] for lit in literals)
@@ -160,7 +173,8 @@ def test_or_true_long(long_cnf, solver):
 def test_or_false_long(long_cnf, solver):
     cnf, primary, literals = long_cnf
     cnf.equals_or(primary, literals).set_literal(-primary)
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert model['sat']
     assert not model[primary.name()]
     assert all(not model[lit.name()] for lit in literals)
@@ -170,7 +184,8 @@ def test_or_false_long(long_cnf, solver):
 def test_or_unsat_long(long_cnf, solver):
     cnf, primary, literals = long_cnf
     cnf.equals_or(primary, literals).set_literals([-primary, literals[0]])
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert not model['sat']
 
 
@@ -178,7 +193,8 @@ def test_or_unsat_long(long_cnf, solver):
 def test_xor_true(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.xor([a, b, c]).set_literal(a)
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert model['sat']
     assert model[a.name()]
     assert model[b.name()] ^ model[c.name()]
@@ -188,7 +204,8 @@ def test_xor_true(triplet_cnf, solver):
 def test_xor_false(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.xor([a, b, c]).set_literal(-a)
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert model['sat']
     assert not model[a.name()]
     assert not (model[b.name()] ^ model[c.name()])
@@ -198,7 +215,8 @@ def test_xor_false(triplet_cnf, solver):
 def test_xor_unsat(triplet_cnf, solver):
     cnf, (a, b, c) = triplet_cnf
     cnf.xor([a, b, c]).set_literals([a, b, c])
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert not model['sat']
 
 
@@ -209,7 +227,8 @@ def test_xor_true_long(long_cnf, solver):
     literals_to_set = sample(literals, randint(0, len(literals) - 1))
     set_literals = [var if randint(0, 1) else -var for var in literals_to_set]
     cnf.set_literals(set_literals)
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     for lit in literals_to_set:
         name = lit.name()
         if lit in set_literals:
@@ -232,7 +251,8 @@ def test_atleast(long_cnf, solver):
     lower_bound = randint(1, max_lower_bound)
     cnf.atleast(literals, lower_bound)
     cnf.set_literals(set_literals)
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert model['sat']
     assert sum([model[lit.name()] for lit in literals]) >= lower_bound
 
@@ -248,6 +268,7 @@ def test_atmost(long_cnf, solver):
     upper_bound = randint(min_upper_bound, len(literals) - 1)
     cnf.atmost(literals, upper_bound)
     cnf.set_literals(set_literals)
-    model = solver.solve(cnf)
+    solution = solver.solve(cnf)
+    model = cnf.make_dict_model(solution)
     assert model['sat']
     assert sum([model[lit.name()] for lit in literals]) <= upper_bound

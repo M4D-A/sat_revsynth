@@ -1,9 +1,9 @@
 from pysat.solvers import Cadical153, Lingeling, Glucose4
-from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
-from sat.cnf import CNF
+from sat.cnf import CNF, Solution
 
-Solution = tuple[bool, list[int]]
+import threading
+import queue
 
 
 class Solver:
@@ -28,14 +28,14 @@ class Solver:
         self.__name = name
         self.__args = args
 
-    def solve(self, cnf: CNF):
+    def solve(self, cnf: CNF) -> Solution:
         if self.__name in self.builtin_solvers:
             solution = self._solve_builtin(cnf)
         elif self.__name in self.external_solvers:
             solution = self._solve_external(cnf)
         else:
             raise ValueError(f"Solver {self.__name} not supported")
-        return self._make_model(solution, cnf)
+        return solution
 
     def _solve_builtin(self, cnf: CNF) -> Solution:
         builtin_solver_class = self.builtin_solvers[self.__name]
@@ -51,26 +51,47 @@ class Solver:
         args = self.external_solvers[self.__name]
         if self.__args is not None:
             args += self.__args
-        with NamedTemporaryFile(dir=".") as f:
-            cnf.to_file(f.name)
-            p = Popen([self.__name, f.name, *args], stdout=PIPE, stderr=PIPE)
-            out, _ = p.communicate()
+        p = Popen([self.__name, *args], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+
+        clauses = cnf._cnf.clauses
+        cls_num = len(clauses)
+        step = 20000
+
+        def producer(out_q):
+            header = f"p cnf {cnf._cnf.nv} {cls_num}\n"
+            out_q.put(header)
+            for i in range(0, cls_num, step):
+                clauses_slice = clauses[i: i + step]
+                string = ' 0\n'.join([' '.join([str(lit) for lit in cl])
+                                      for cl in clauses_slice]) + ' 0\n'
+                out_q.put(string)
+            out_q.put(None)
+
+        def consumer(in_q, p):
+            while True:
+                item = in_q.get()
+                if item is None:
+                    break
+                p.stdin.write(item.encode())
+            p.stdin.close()
+
+        q = queue.Queue()
+        t1 = threading.Thread(target=producer, args=(q,))
+        t2 = threading.Thread(target=consumer, args=(q, p))
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
+        assert p.stdout is not None
+        out = p.stdout.read()
+
         string = out.decode('utf-8').lower()
         if "unsat" in string:
             return (False, [])
         else:
             ids = self._extract_ints(string)
             return (True, ids)
-
-    @staticmethod
-    def _make_model(solution: Solution, cnf: CNF):
-        sat, solution_ints = solution
-        if not sat:
-            return {"sat": False}
-        all_literals = cnf.v_pool().obj2id.items()
-        model = {name: -id not in solution_ints for name, id in all_literals}
-        model["sat"] = True
-        return model
 
     @staticmethod
     def _extract_ints(string: str) -> list[int]:

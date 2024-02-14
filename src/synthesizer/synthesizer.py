@@ -83,25 +83,28 @@ class Synthesizer:
 
         return cnf, controls, targets
 
-    def _gate_exclusion_list(self, layer: int, gate: Gate) -> list[Literal]:
+    def _gate_exclusion_list(self, layer: int, gate: Gate) -> list[int]:
         controls, target = gate
         assert layer < self._gate_count
         assert all([0 <= c and c < self._width] for c in controls)
         assert 0 <= target and target < self._width
-        exclusion_list: list[Literal] = []
+        exclusion_list: list[int] = []
         for i in range(self._width):
-            c_literal = self._controls[layer][i] if i in controls else -self._controls[layer][i]
-            t_literal = self._targets[layer][i] if i == target else -self._targets[layer][i]
+            c_literal = self._controls[layer][i].value()
+            c_literal = c_literal if i in controls else -c_literal
+            t_literal = self._targets[layer][i].value()
+            t_literal = t_literal if i == target else -t_literal
             exclusion_list += [c_literal, t_literal]
         return exclusion_list
 
-    def exclude_subcircuit(self, cirucit: Circuit, shift: int = 0) -> "Synthesizer":
-        gates = cirucit.gates()
-        exclusion_list = []
-        for layer, gate in enumerate(gates):
-            targeted_layer = (layer + shift) % self._gate_count
-            exclusion_list += self._gate_exclusion_list(targeted_layer, gate)
-        self._cnf.exclude(exclusion_list)
+    def exclude_subcircuit(self, circuit: Circuit) -> "Synthesizer":
+        if circuit._exclusion_list is None:
+            gates = circuit.gates()
+            exclusion_list: list[int] = []
+            for layer, gate in enumerate(gates):
+                exclusion_list += self._gate_exclusion_list(layer, gate)
+            circuit._exclusion_list = exclusion_list
+        self._cnf.exclude_by_values(circuit._exclusion_list)
         return self
 
     def disable_empty_lines(self) -> "Synthesizer":
@@ -114,18 +117,27 @@ class Synthesizer:
             self._cnf.atleast(line_variables, 1)
         return self
 
+    def disable_full_control_lines(self) -> "Synthesizer":
+        line_iter = range(self._width)
+        gate_iter = range(self._gate_count)
+        for lid in line_iter:
+            line_controls = [-self._controls[gid][lid] for gid in gate_iter]
+            self._cnf.atleast(line_controls, 1)
+        return self
+
     def solve(self):
         if self._circuit is None:
             line_iter = range(self._width)
             gate_iter = range(self._gate_count)
-            solution = self._solver.solve(self._cnf)
-            if not solution["sat"]:
+            sat, literals = self._solver.solve(self._cnf)
+            if not sat:
                 self.circuit = None
                 return self.circuit
             circuit = Circuit(self._width)
             for gid in gate_iter:
-                targets = [lid for lid in line_iter if solution[f"t_{lid}_{gid}"]]
-                controls = [lid for lid in line_iter if solution[f"c_{lid}_{gid}"]]
+                targets = [lid for lid in line_iter if self._targets[gid][lid].value() in literals]
+                controls = [lid for lid in line_iter if self._controls[gid][lid].value()
+                            in literals]
                 assert len(targets) == 1
                 circuit.append((controls, targets[0]))
             self._circuit = circuit
