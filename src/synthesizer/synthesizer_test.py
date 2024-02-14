@@ -7,7 +7,7 @@ from synthesizer.synthesizer import Synthesizer
 solver_names = Solver.builtin_solvers.keys()
 solvers = [Solver(solver_name) for solver_name in solver_names]
 max_bits_size = 8
-epochs = 2**3
+epochs = 2**6
 bits_num_randomizer = list(randint(3, max_bits_size) for _ in range(epochs))
 
 

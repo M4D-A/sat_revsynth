@@ -2,10 +2,9 @@ from collections.abc import Iterable
 from pysat.formula import CNF as CNF_core, IDPool
 from pysat.card import CardEnc
 from itertools import product
-import threading
-import queue
 
 VarName = str
+Solution = tuple[bool, list[int]]
 
 
 class Literal:
@@ -236,3 +235,12 @@ class CNF():
         clause = [-lit for lit in literals]
         self._cnf.clauses.append(clause)
         return self
+
+    def make_dict_model(self, solution: Solution):
+        sat, solution_ints = solution
+        if not sat:
+            return {"sat": False}
+        all_literals = self.v_pool().obj2id.items()
+        model = {name: -id not in solution_ints for name, id in all_literals}
+        model["sat"] = True
+        return model
