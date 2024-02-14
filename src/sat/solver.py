@@ -1,5 +1,4 @@
 from pysat.solvers import Cadical153, Lingeling, Glucose4
-from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
 from sat.cnf import CNF, Solution
 
