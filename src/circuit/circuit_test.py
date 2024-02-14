@@ -168,7 +168,7 @@ def test_inplace(empty_circuit, identity_tt):
 
 @pytest.mark.parametrize("bits_num", bits_num_randomizer)
 def test_reverse(random_circuit, identity_tt):
-    reversed_circuit = random_circuit.reverse(inplace=False)
+    reversed_circuit = random_circuit.reverse()
     assert (random_circuit + reversed_circuit).tt() == identity_tt
     assert (reversed_circuit + random_circuit).tt() == identity_tt
     assert len(random_circuit + reversed_circuit) == 2 * len(random_circuit)
@@ -179,22 +179,22 @@ def test_reverse(random_circuit, identity_tt):
 def test_rotate(random_circuit):
     size = len(random_circuit)
     shift = randint(-3*size, 3*size)
-    rotated_circuit = random_circuit.rotate(shift, inplace=False)
+    rotated_circuit = random_circuit.rotate(shift)
     assert len(random_circuit) == len(rotated_circuit)
     for i, shifted_gate in enumerate(rotated_circuit.gates()):
         gate = random_circuit.gates()[(i+shift) % size]
         assert shifted_gate == gate
-    re_rotated_circuit = rotated_circuit.rotate(-shift, inplace=False)
+    re_rotated_circuit = rotated_circuit.rotate(-shift)
     assert re_rotated_circuit == random_circuit
 
 
 @pytest.mark.parametrize("bits_num", bits_num_randomizer)
 def test_permute(random_circuit, random_permutations):
     permutation, inv_permutation = random_permutations
-    permuted_circuit = random_circuit.permute(permutation, inplace=False)
+    permuted_circuit = random_circuit.permute(permutation)
     assert permuted_circuit.tt() == random_circuit.tt().permute(
-        permutation, permute_input=True, inplace=False)
-    re_permuted_circuit = permuted_circuit.permute(inv_permutation, inplace=False)
+        permutation, permute_input=True)
+    re_permuted_circuit = permuted_circuit.permute(inv_permutation)
     assert re_permuted_circuit == random_circuit
 
     recreated_circuit = Circuit(random_circuit.width())
@@ -206,7 +206,7 @@ def test_permute(random_circuit, random_permutations):
 @pytest.mark.parametrize("bits_num", bits_num_randomizer)
 def test_swap(random_circuit):
     swap_id = randint(0, len(random_circuit) - 1)
-    swapped = random_circuit.swap(swap_id, inplace=False)
+    swapped = random_circuit.swap(swap_id)
     assert len(swapped) == len(random_circuit)
     assert swapped[swap_id] == random_circuit[(swap_id + 1) % len(swapped)]
     assert random_circuit[swap_id] == swapped[(swap_id + 1) % len(swapped)]
@@ -304,38 +304,3 @@ def test_unroll():
     swap_space = circuit.unroll()
     assert len(swap_space) == 60
     assert circuit in swap_space
-
-
-@pytest.mark.parametrize("bits_num", bits_num_randomizer)
-def test_empty_lines(random_circuit):
-    extensions = random_circuit.empty_line_extensions()
-    assert len(extensions) <= random_circuit.width() + 1
-    for ext in extensions:
-        assert len(ext) == len(random_circuit)
-        assert ext.width() == random_circuit.width() + 1
-        gates = random_circuit.gates()
-        ext_gates = ext.gates()
-        for (ext_controls, ext_target), (controls, target) in zip(ext_gates, gates):
-            assert len(ext_controls) == len(controls)
-            assert ext_target in [target, target + 1]
-            for c, ext_c in zip(controls, ext_controls):
-                assert ext_c in [c, c + 1]
-
-
-@pytest.mark.parametrize("bits_num", bits_num_randomizer)
-def test_full_lines(random_circuit):
-    extensions = random_circuit.full_line_extensions()
-    assert len(extensions) <= random_circuit.width() + 1
-    for ext in extensions:
-        assert len(ext) == len(random_circuit)
-        assert ext.width() == random_circuit.width() + 1
-        gates = random_circuit.gates()
-        ext_gates = ext.gates()
-        for (ext_controls, ext_target), (controls, target) in zip(ext_gates, gates):
-            assert len(ext_controls) == len(controls) + 1
-            assert ext_target in [target, target + 1]
-            count = 0
-            for c, ext_c in zip(controls, ext_controls):
-                if ext_c not in [c, c - 1]:
-                    count += 1
-            assert count in [0, 1]
