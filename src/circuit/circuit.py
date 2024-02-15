@@ -7,6 +7,7 @@ from itertools import permutations
 from functools import reduce
 from truth_table.truth_table import TruthTable
 from utils.inplace import inplace
+from collections import deque
 
 Gate = tuple[list[int], int]  # Gate in integer representation
 
@@ -178,13 +179,45 @@ class Circuit:
             if not (node in visited):
                 node._dfs(visited)
 
-    def swap_space(self) -> list["Circuit"]:
+    def swap_space_dfs(self) -> list["Circuit"]:
         nodes = []
         self._dfs(nodes)
         return nodes
 
-    def unroll(self) -> list["Circuit"]:
-        equivalents = self.swap_space()
+    def swap_space_bfs(self, initial: list["Circuit"] = []) -> list["Circuit"]:
+        visited: list["Circuit"] = []
+        queue: deque["Circuit"] = deque()
+        queue.append(self)
+        for other in initial:
+            if other not in initial:
+                queue.append(other)
+
+        while queue:
+            curr = queue.popleft()
+
+            if curr not in visited:
+                visited.append(curr)
+
+                for neighbor in curr.swaps():
+                    if neighbor not in visited:
+                        queue.append(neighbor)
+        return visited
+
+    def local_unroll(self) -> list["Circuit"]:
+        equivalents = self.rotations()
+
+        temp_list = [circuit.reverse() for circuit in equivalents]
+        equivalents += temp_list
+
+        temp_list = []
+        for circuit in equivalents:
+            temp_list += circuit.permutations()
+        equivalents = temp_list
+
+        return equivalents
+
+    def unroll(self, initial: list["Circuit"] = []) -> list["Circuit"]:
+        equivalents = self.swap_space_bfs(initial)
 
         temp_list = []
         for circuit in equivalents:

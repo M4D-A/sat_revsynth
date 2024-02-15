@@ -19,12 +19,13 @@ class CollectionSynthesizer:
             set_width_subcollection = [[], []]  # gc in {0,1}
             self._collection.append(set_width_subcollection)
             for gc in range(2, self._max_gate_count + 1):
-                start = timer()
                 dgs = DimGroupSynthesizer(width, gc)
+                initial = []
+                start = timer()
                 print()
-                print(f"(W, GC) = ({width}, {gc})")
+                print(f"(W, GC) = ({width}, {gc}) --           {len(initial):7} initial circuits")
                 print("-----------------------------------------")
-                dimgroup = dgs.synthesize_mt(threads_num)
+                dimgroup = dgs.synthesize_mt(threads_num, initial)
                 dgs_time = timer() - start
                 print("-----------------------------------------")
                 print(f"TOTAL RT:       {dgs_time:6.2f}s -- {len(dimgroup):7} circuits")
@@ -40,7 +41,6 @@ class CollectionSynthesizer:
                 right_dimgroup = self._collection[width][right_gc]
                 for left_gate, right_gate in product(left_dimgroup, right_dimgroup):
                     generated.append(left_gate + right_gate)
-        unrolled = []
-        for circuit in generated:
-            unrolled += circuit.unroll()
-        return Circuit.filter_duplicates(unrolled)
+        if len(generated) > 0:
+            generated = generated[0].unroll(generated)
+        return generated

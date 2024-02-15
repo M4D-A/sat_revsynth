@@ -3,6 +3,7 @@ from synthesizer.synthesizer import Synthesizer
 from truth_table.truth_table import TruthTable
 from circuit.circuit import Circuit
 from multiprocessing import Pool
+from itertools import repeat
 from timeit import default_timer as timer
 DimGroup = list[Circuit]
 
@@ -45,14 +46,16 @@ class DimGroupSynthesizer:
         self._width = width
         self._gate_count = gate_count
 
-    def synthesize(self, controls_num: int | None = None) -> list[Circuit]:
-        dim_group = []
+    def synthesize(self, controls_num: int | None = None, initial: list[Circuit] = []) -> list[Circuit]:
+        cnum = controls_num
+        dim_group = [circ for circ in initial if circ.controls_num() == cnum or cnum is None]
+        initial_size = len(dim_group)
         gst = 0.0
         gut = 0.0
         while True:
             ps = PartialSynthesiser(self._width, self._gate_count)
-            if controls_num is not None:
-                ps.restrict_global_controls(controls_num)
+            if cnum is not None:
+                ps.restrict_global_controls(cnum)
             for circuit in dim_group:
                 ps.exclude_subcircuit(circuit)
             dim_partial_group, st, ut = ps.synthesize()
@@ -62,17 +65,17 @@ class DimGroupSynthesizer:
                 dim_group += dim_partial_group
             else:
                 break
-        print(f"- {controls_num:2}: {gst:6.2f}s / {gut:6.2f}s -- {len(dim_group): 7} circuits")
+        print(f"- {cnum:2}: {gst:6.2f}s / {gut:6.2f}s -- {len(dim_group): 7} ({initial_size} initial) circuits")
         return dim_group
 
-    def synthesize_mt(self, threads: int):
+    def synthesize_mt(self, threads: int, initial: list[Circuit] = []):
         width = self._width
         gate_count = self._gate_count
         max_controls_num = (width - 1) * gate_count
         controls_num_range = range(max_controls_num + 1)
 
         with Pool(threads) as p:
-            results = list(p.map(self.synthesize, controls_num_range))
+            results = list(p.starmap(self.synthesize, zip(controls_num_range, repeat(initial))))
 
         dim_group = []
         for subgroup in results:
