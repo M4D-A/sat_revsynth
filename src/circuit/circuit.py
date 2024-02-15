@@ -234,5 +234,5 @@ class Circuit:
             temp_list += circuit.permutations()
         equivalents = temp_list
 
-        unique = self.filter_duplicates(equivalents)
-        return unique
+        equivalents = self.filter_duplicates(equivalents)
+        return equivalents
