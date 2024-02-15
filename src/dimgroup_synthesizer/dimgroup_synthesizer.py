@@ -40,8 +40,8 @@ class DimGroupSynthesiser:
         self._width = width
         self._gate_count = gate_count
 
-    def synthesise(self, initial: list[Circuit] | None = None, controls_num: int | None = None) -> list[Circuit]:
-        dim_group = initial if initial is not None else []
+    def synthesise(self, controls_num: int | None = None) -> list[Circuit]:
+        dim_group = []
         while True:
             ps = PartialSynthesiser(self._width, self._gate_count)
             if controls_num is not None:
@@ -55,11 +55,12 @@ class DimGroupSynthesiser:
                 break
         return dim_group
 
-    def synthesize_mt(self, threads: int, initial: list[Circuit] | None = None):
+    def synthesize_mt(self, threads: int):
         width = self._width
         gate_count = self._gate_count
-        controls_num_range = range(1) if width == 1 else range(2, (width - 1) * gate_count + 1)
-        def exec_synthesize(controls_num): return self.synthesise(initial, controls_num)
+        max_controls_num = (width - 1) * gate_count
+        controls_num_range = range(max_controls_num)
+        def exec_synthesize(controls_num): return self.synthesise(controls_num)
 
         with Pool(threads) as p:
             results = list(p.map(exec_synthesize, controls_num_range))

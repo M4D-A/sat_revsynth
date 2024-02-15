@@ -1,6 +1,6 @@
 from collection_synthesizer.collection_synthesizer import CollectionSynthesizer
 
-cs = CollectionSynthesizer(3, 6)
+cs = CollectionSynthesizer(4, 6)
 collection = cs.synthesize()
 
 for width, width_subcollection in enumerate(collection):
