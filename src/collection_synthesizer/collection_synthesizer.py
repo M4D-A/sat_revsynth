@@ -1,5 +1,5 @@
 from circuit.circuit import Circuit
-from dimgroup_synthesizer.dimgroup_synthesizer import DimGroupSynthesiser, DimGroup
+from dimgroup_synthesizer.dimgroup_synthesizer import DimGroupSynthesizer, DimGroup
 from itertools import product
 
 Collection = list[list[DimGroup]]

@@ -18,7 +18,7 @@ class PartialSynthesiser:
         self._synthesizer.disable_empty_lines()
         self._synthesizer.disable_full_control_lines()
 
-    def synthesise(self) -> list[Circuit]:
+    def synthesize(self) -> tuple[list[Circuit], float, float]:
         circuit = self._synthesizer.solve()
         if (circuit):
             equivalents = circuit.unroll()
@@ -48,7 +48,7 @@ class DimGroupSynthesizer:
                 ps.restrict_global_controls(controls_num)
             for circuit in dim_group:
                 ps.exclude_subcircuit(circuit)
-            dim_partial_group = ps.synthesise()
+            dim_partial_group, st, ut = ps.synthesize()
             if (dim_partial_group):
                 dim_group += dim_partial_group
             else:
