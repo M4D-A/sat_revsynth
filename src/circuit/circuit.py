@@ -4,6 +4,7 @@ with catch_warnings():
     from qiskit import QuantumCircuit
 from copy import copy, deepcopy
 from itertools import permutations
+from functools import reduce
 from truth_table.truth_table import TruthTable
 from utils.inplace import inplace
 
@@ -29,6 +30,9 @@ class Circuit:
 
     def gates(self) -> list[Gate]:
         return self._gates
+
+    def controls_num(self) -> int:
+        return reduce(lambda x, y: x + len(y[0]), self._gates, 0)
 
     def __copy__(self) -> "Circuit":
         new = Circuit(self._width)

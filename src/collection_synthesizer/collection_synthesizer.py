@@ -1,6 +1,7 @@
 from circuit.circuit import Circuit
 from dimgroup_synthesizer.dimgroup_synthesizer import DimGroupSynthesizer, DimGroup
 from itertools import product
+from timeit import default_timer as timer
 
 Collection = list[list[DimGroup]]
 
@@ -18,8 +19,15 @@ class CollectionSynthesizer:
             set_width_subcollection = [[], []]  # gc in {0,1}
             self._collection.append(set_width_subcollection)
             for gc in range(2, self._max_gate_count + 1):
+                start = timer()
                 dgs = DimGroupSynthesizer(width, gc)
+                print()
+                print(f"(W, GC) = ({width}, {gc})")
+                print("-----------------------------------------")
                 dimgroup = dgs.synthesize_mt(threads_num)
+                dgs_time = timer() - start
+                print("-----------------------------------------")
+                print(f"TOTAL RT:       {dgs_time:6.2f}s -- {len(dimgroup):7} circuits")
                 set_width_subcollection.append(dimgroup)
         return self._collection
 

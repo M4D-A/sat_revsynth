@@ -3,6 +3,7 @@ from synthesizer.synthesizer import Synthesizer
 from truth_table.truth_table import TruthTable
 from circuit.circuit import Circuit
 from multiprocessing import Pool
+from timeit import default_timer as timer
 DimGroup = list[Circuit]
 
 
@@ -19,12 +20,16 @@ class PartialSynthesiser:
         self._synthesizer.disable_full_control_lines()
 
     def synthesize(self) -> tuple[list[Circuit], float, float]:
+        synth_start = timer()
         circuit = self._synthesizer.solve()
+        synth_time = timer() - synth_start
         if (circuit):
+            unroll_start = timer()
             equivalents = circuit.unroll()
-            return equivalents
+            unroll_time = timer() - unroll_start
+            return equivalents, synth_time, unroll_time
         else:
-            return []
+            return [], synth_time, 0.0
 
     def restrict_global_controls(self, controls_num: int):
         self._synthesizer.set_global_controls_num(controls_num)
@@ -42,6 +47,8 @@ class DimGroupSynthesizer:
 
     def synthesize(self, controls_num: int | None = None) -> list[Circuit]:
         dim_group = []
+        gst = 0.0
+        gut = 0.0
         while True:
             ps = PartialSynthesiser(self._width, self._gate_count)
             if controls_num is not None:
@@ -49,10 +56,13 @@ class DimGroupSynthesizer:
             for circuit in dim_group:
                 ps.exclude_subcircuit(circuit)
             dim_partial_group, st, ut = ps.synthesize()
+            gst += st
+            gut += ut
             if (dim_partial_group):
                 dim_group += dim_partial_group
             else:
                 break
+        print(f"- {controls_num:2}: {gst:6.2f}s / {gut:6.2f}s -- {len(dim_group): 7} circuits")
         return dim_group
 
     def synthesize_mt(self, threads: int):
