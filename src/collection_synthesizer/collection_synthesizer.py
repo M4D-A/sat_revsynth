@@ -13,14 +13,13 @@ class CollectionSynthesizer:
             [[] for _ in range(max_gate_count)]
         ]
 
-    def synthesize(self) -> Collection:
+    def synthesize(self, threads_num: int = 1) -> Collection:
         for width in range(1, self._max_width + 1):
             set_width_subcollection = [[], []]  # gc in {0,1}
             self._collection.append(set_width_subcollection)
             for gc in range(2, self._max_gate_count + 1):
-                dgs = DimGroupSynthesiser(width, gc)
-                dimgroup = dgs.synthesize_mt(16)
-                print(f"({width}, {gc}) -- {len(dimgroup)}")
+                dgs = DimGroupSynthesizer(width, gc)
+                dimgroup = dgs.synthesize_mt(threads_num)
                 set_width_subcollection.append(dimgroup)
         return self._collection
 

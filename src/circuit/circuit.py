@@ -127,7 +127,7 @@ class Circuit:
         new._gates = new_gates
         return new
 
-    def swap(self, id: int, **_) -> "Circuit":
+    def swap(self, id: int) -> "Circuit":
         assert 0 <= id and id < len(self)
         next_id = (id + 1) % len(self)
         new = Circuit(self._width)
@@ -163,7 +163,7 @@ class Circuit:
 
     def swaps(self) -> list["Circuit"]:
         swap_ids = self.swappable_gates()
-        equivalents = [copy(self)] + [self.swap(id, inplace=False) for id in swap_ids]
+        equivalents = [copy(self)] + [self.swap(id) for id in swap_ids]
         unique = self.filter_duplicates(equivalents)
         return unique
 

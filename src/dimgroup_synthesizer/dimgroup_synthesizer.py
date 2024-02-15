@@ -2,7 +2,7 @@ from sat.solver import Solver
 from synthesizer.synthesizer import Synthesizer
 from truth_table.truth_table import TruthTable
 from circuit.circuit import Circuit
-from multiprocess import Pool
+from multiprocessing import Pool
 DimGroup = list[Circuit]
 
 
@@ -35,12 +35,12 @@ class PartialSynthesiser:
         return self
 
 
-class DimGroupSynthesiser:
+class DimGroupSynthesizer:
     def __init__(self, width: int, gate_count: int):
         self._width = width
         self._gate_count = gate_count
 
-    def synthesise(self, controls_num: int | None = None) -> list[Circuit]:
+    def synthesize(self, controls_num: int | None = None) -> list[Circuit]:
         dim_group = []
         while True:
             ps = PartialSynthesiser(self._width, self._gate_count)
@@ -59,11 +59,10 @@ class DimGroupSynthesiser:
         width = self._width
         gate_count = self._gate_count
         max_controls_num = (width - 1) * gate_count
-        controls_num_range = range(max_controls_num)
-        def exec_synthesize(controls_num): return self.synthesise(controls_num)
+        controls_num_range = range(max_controls_num + 1)
 
         with Pool(threads) as p:
-            results = list(p.map(exec_synthesize, controls_num_range))
+            results = list(p.map(self.synthesize, controls_num_range))
 
         dim_group = []
         for subgroup in results:
