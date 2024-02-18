@@ -1,6 +1,7 @@
 from circuit.circuit import Circuit
-from dimgroup_synthesizer.dimgroup_synthesizer import DimGroupSynthesiser, DimGroup
+from dimgroup_synthesizer.dimgroup_synthesizer import DimGroupSynthesizer, DimGroup
 from itertools import product
+from timeit import default_timer as timer
 
 Collection = list[list[DimGroup]]
 
@@ -13,15 +14,21 @@ class CollectionSynthesizer:
             [[] for _ in range(max_gate_count)]
         ]
 
-    def synthesize(self) -> Collection:
+    def synthesize(self, threads_num: int = 1) -> Collection:
         for width in range(1, self._max_width + 1):
             set_width_subcollection = [[], []]  # gc in {0,1}
             self._collection.append(set_width_subcollection)
             for gc in range(2, self._max_gate_count + 1):
-                trivial = self._construct_from_previous(width, gc)
-                print(width, gc, len(trivial))
-                dgs = DimGroupSynthesiser(width, gc)
-                dimgroup = dgs.synthesise(trivial)
+                dgs = DimGroupSynthesizer(width, gc)
+                initial = []
+                start = timer()
+                print()
+                print(f"(W, GC) = ({width}, {gc}) --           {len(initial):7} initial circuits")
+                print("-----------------------------------------")
+                dimgroup = dgs.synthesize_mt(threads_num, initial)
+                dgs_time = timer() - start
+                print("-----------------------------------------")
+                print(f"TOTAL RT:       {dgs_time:6.2f}s -- {len(dimgroup):7} circuits")
                 set_width_subcollection.append(dimgroup)
         return self._collection
 
@@ -34,7 +41,6 @@ class CollectionSynthesizer:
                 right_dimgroup = self._collection[width][right_gc]
                 for left_gate, right_gate in product(left_dimgroup, right_dimgroup):
                     generated.append(left_gate + right_gate)
-        unrolled = []
-        for circuit in generated:
-            unrolled += circuit.unroll()
-        return Circuit.filter_duplicates(unrolled)
+        if len(generated) > 0:
+            generated = generated[0].unroll(generated)
+        return generated

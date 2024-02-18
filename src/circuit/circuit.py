@@ -4,8 +4,10 @@ with catch_warnings():
     from qiskit import QuantumCircuit
 from copy import copy, deepcopy
 from itertools import permutations
+from functools import reduce
 from truth_table.truth_table import TruthTable
 from utils.inplace import inplace
+from collections import deque
 
 Gate = tuple[list[int], int]  # Gate in integer representation
 
@@ -29,6 +31,9 @@ class Circuit:
 
     def gates(self) -> list[Gate]:
         return self._gates
+
+    def controls_num(self) -> int:
+        return reduce(lambda x, y: x + len(y[0]), self._gates, 0)
 
     def __copy__(self) -> "Circuit":
         new = Circuit(self._width)
@@ -127,7 +132,7 @@ class Circuit:
         new._gates = new_gates
         return new
 
-    def swap(self, id: int, **_) -> "Circuit":
+    def swap(self, id: int) -> "Circuit":
         assert 0 <= id and id < len(self)
         next_id = (id + 1) % len(self)
         new = Circuit(self._width)
@@ -163,7 +168,7 @@ class Circuit:
 
     def swaps(self) -> list["Circuit"]:
         swap_ids = self.swappable_gates()
-        equivalents = [copy(self)] + [self.swap(id, inplace=False) for id in swap_ids]
+        equivalents = [copy(self)] + [self.swap(id) for id in swap_ids]
         unique = self.filter_duplicates(equivalents)
         return unique
 
@@ -174,13 +179,39 @@ class Circuit:
             if not (node in visited):
                 node._dfs(visited)
 
-    def swap_space(self) -> list["Circuit"]:
+    def swap_space_dfs(self) -> list["Circuit"]:
         nodes = []
         self._dfs(nodes)
         return nodes
 
-    def unroll(self) -> list["Circuit"]:
-        equivalents = self.swap_space()
+    def swap_space_bfs(self, initial: list["Circuit"] = []) -> list["Circuit"]:
+        visited: list["Circuit"] = []
+        queue: deque["Circuit"] = deque()
+        queue.append(self)
+        for other in initial:
+            if other not in initial:
+                queue.append(other)
+        while queue:
+            curr = queue.popleft()
+            if curr not in visited:
+                visited.append(curr)
+                for neighbor in curr.swaps():
+                    if neighbor not in visited:
+                        queue.append(neighbor)
+        return visited
+
+    def local_unroll(self) -> list["Circuit"]:
+        equivalents = self.rotations()
+        temp_list = [circuit.reverse() for circuit in equivalents]
+        equivalents += temp_list
+        temp_list = []
+        for circuit in equivalents:
+            temp_list += circuit.permutations()
+        equivalents = temp_list
+        return equivalents
+
+    def unroll(self, initial: list["Circuit"] = []) -> list["Circuit"]:
+        equivalents = self.swap_space_bfs(initial)
 
         temp_list = []
         for circuit in equivalents:
@@ -190,12 +221,12 @@ class Circuit:
 
         temp_list = [circuit.reverse() for circuit in equivalents]
         equivalents += temp_list
-        equivalents = self.filter_duplicates(equivalents)
+        equivalents = Circuit.filter_duplicates(equivalents)
 
         temp_list = []
         for circuit in equivalents:
             temp_list += circuit.permutations()
         equivalents = temp_list
 
-        unique = self.filter_duplicates(equivalents)
-        return unique
+        equivalents = Circuit.filter_duplicates(equivalents)
+        return equivalents

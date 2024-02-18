@@ -1,9 +1,9 @@
 from collection_synthesizer.collection_synthesizer import CollectionSynthesizer
+from dimgroup_synthesizer.dimgroup_synthesizer import DimGroupSynthesizer
 
-cs = CollectionSynthesizer(3, 10)
-collection = cs.synthesize()
+cs = CollectionSynthesizer(5, 6)
+collection = cs.synthesize(16)
 
-for width, width_subcollection in enumerate(collection):
-    for gc, dimgroup in enumerate(width_subcollection):
-        print(f"({width}, {gc}): {len(dimgroup)}")
-    print()
+for w, wsc in enumerate(collection):
+    for gc, dimg in enumerate(wsc):
+        print(f"({w}, {gc}): {len(dimg)}")
