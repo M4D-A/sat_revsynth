@@ -191,13 +191,10 @@ class Circuit:
         for other in initial:
             if other not in initial:
                 queue.append(other)
-
         while queue:
             curr = queue.popleft()
-
             if curr not in visited:
                 visited.append(curr)
-
                 for neighbor in curr.swaps():
                     if neighbor not in visited:
                         queue.append(neighbor)
@@ -205,15 +202,12 @@ class Circuit:
 
     def local_unroll(self) -> list["Circuit"]:
         equivalents = self.rotations()
-
         temp_list = [circuit.reverse() for circuit in equivalents]
         equivalents += temp_list
-
         temp_list = []
         for circuit in equivalents:
             temp_list += circuit.permutations()
         equivalents = temp_list
-
         return equivalents
 
     def unroll(self, initial: list["Circuit"] = []) -> list["Circuit"]:
@@ -227,12 +221,12 @@ class Circuit:
 
         temp_list = [circuit.reverse() for circuit in equivalents]
         equivalents += temp_list
-        equivalents = self.filter_duplicates(equivalents)
+        equivalents = Circuit.filter_duplicates(equivalents)
 
         temp_list = []
         for circuit in equivalents:
             temp_list += circuit.permutations()
         equivalents = temp_list
 
-        equivalents = self.filter_duplicates(equivalents)
+        equivalents = Circuit.filter_duplicates(equivalents)
         return equivalents

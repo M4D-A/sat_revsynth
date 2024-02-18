@@ -2,4 +2,3 @@ wheel
 pytest
 python-sat == 0.1.8.dev10
 qiskit 
-multiprocess
