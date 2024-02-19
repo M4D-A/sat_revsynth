@@ -21,12 +21,11 @@ class CollectionSynthesizer:
             self._collection.append(set_width_subcollection)
             for gc in range(2, self._max_gate_count + 1):
                 dgs = DimGroupSynthesizer(width, gc)
-                initial = []
                 start = timer()
                 print()
-                print(f"(W, GC) = ({width}, {gc}) --           {len(initial):7} initial circuits")
+                print(f"(W, GC) = ({width}, {gc})")
                 print("-----------------------------------------")
-                dimgroup = dgs.synthesize_mt(threads_num, initial)
+                dimgroup = dgs.synthesize_mt(threads_num)
                 dgs_time = timer() - start
                 print("-----------------------------------------")
                 print(f"TOTAL RT:       {dgs_time:6.2f}s -- {len(dimgroup):7} circuits")

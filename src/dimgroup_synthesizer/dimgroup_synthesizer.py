@@ -3,7 +3,6 @@ from synthesizer.synthesizer import Synthesizer
 from truth_table.truth_table import TruthTable
 from circuit.circuit import Circuit
 from multiprocessing import Pool
-from itertools import repeat
 from timeit import default_timer as timer
 DimGroup = list[Circuit]
 
@@ -46,10 +45,9 @@ class DimGroupSynthesizer:
         self._width = width
         self._gate_count = gate_count
 
-    def synthesize(self, controls_num: int | None = None, initial: list[Circuit] = []) -> list[Circuit]:
+    def synthesize(self, controls_num: int | None = None) -> list[Circuit]:
         cnum = controls_num
-        dim_group = [circ for circ in initial if circ.controls_num() == cnum or cnum is None]
-        initial_size = len(dim_group)
+        dim_group = []
         gst = 0.0
         gut = 0.0
         while True:
@@ -65,17 +63,17 @@ class DimGroupSynthesizer:
                 dim_group += dim_partial_group
             else:
                 break
-        print(f"- {cnum:2}: {gst:6.2f}s / {gut:6.2f}s -- {len(dim_group): 7} ({initial_size} initial) circuits")
+        print(f"- {cnum:2}: {gst:6.2f}s / {gut:6.2f}s -- {len(dim_group): 7}")
         return dim_group
 
-    def synthesize_mt(self, threads: int, initial: list[Circuit] = []):
+    def synthesize_mt(self, threads: int):
         width = self._width
         gate_count = self._gate_count
         max_controls_num = (width - 1) * gate_count
         controls_num_range = range(max_controls_num + 1)
 
         with Pool(threads) as p:
-            results = list(p.starmap(self.synthesize, zip(controls_num_range, repeat(initial))))
+            results = list(p.map(self.synthesize, controls_num_range))
 
         dim_group = []
         for subgroup in results:
