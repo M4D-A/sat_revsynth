@@ -16,6 +16,10 @@ class DimGroup:
     def __bool__(self) -> bool:
         return bool(self._circuits)
 
+    def append(self, other: Circuit):
+        assert (self._width, self._gate_count) == (other._width, len(other))
+        self._circuits.append(other)
+
     def extend(self, other: "DimGroup"):
         assert (self._width, self._gate_count) == (other._width, other._gate_count)
         self._circuits += other._circuits
