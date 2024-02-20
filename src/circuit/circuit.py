@@ -3,12 +3,12 @@ with catch_warnings():
     filterwarnings("ignore", category=DeprecationWarning)
     from qiskit import QuantumCircuit
 from copy import copy, deepcopy
-from itertools import permutations
+from itertools import permutations, combinations
 from functools import reduce
 from truth_table.truth_table import TruthTable
 from utils.inplace import inplace
 from collections import deque
-from math import ceil
+
 
 Gate = tuple[list[int], int]  # Gate in integer representation
 
@@ -239,3 +239,43 @@ class Circuit:
 
     def min_slice(self):
         return self.slice(0, len(self) // 2 + 1)
+
+    def add_empty_line(self, line_id: int) -> "Circuit":
+        assert 0 <= line_id and line_id <= self._width
+        new = Circuit(self._width + 1)
+        for controls, target in self._gates:
+            new_target = target if line_id > target else target + 1
+            new_controls = [(c if line_id > c else c + 1) for c in controls]
+            new.mcx(new_controls, new_target)
+        return new
+
+    def add_full_line(self, line_id: int) -> "Circuit":
+        assert 0 <= line_id and line_id <= self._width
+        new = Circuit(self._width + 1)
+        for controls, target in self._gates:
+            new_target = target if line_id > target else target + 1
+            new_controls = [(c if line_id > c else c + 1) for c in controls] + [line_id]
+            new.mcx(new_controls, new_target)
+        return new
+
+    def empty_line_extensions(self, target_width: int):
+        lines_to_insert = target_width - self._width
+        assert lines_to_insert >= 0
+        extensions = []
+        for lines_ids in combinations(range(target_width), lines_to_insert):
+            new = self
+            for line_id in lines_ids:
+                new = new.add_empty_line(line_id)
+            extensions.append(new)
+        return extensions
+
+    def full_line_extensions(self, target_width: int):
+        lines_to_insert = target_width - self._width
+        assert lines_to_insert >= 0
+        extensions = []
+        for lines_ids in combinations(range(target_width), lines_to_insert):
+            new = self
+            for line_id in lines_ids:
+                new = new.add_full_line(line_id)
+            extensions.append(new)
+        return extensions

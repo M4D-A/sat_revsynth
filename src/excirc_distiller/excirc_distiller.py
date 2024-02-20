@@ -13,12 +13,13 @@ class ExCircDistiller:
         assert all(len(subcoll) == self._max_gc + 1 for subcoll in collection)
 
     def distill(self):
-        return self._raw_excirc_collection()
+        self._raw_excirc_collection()
+        return self._excirc_collection
 
-    def _raw_excirc_collection(self) -> ExcCollection:
+    def _raw_excirc_collection(self):
         exc_collection: ExcCollection = []
         for width in range(self._max_width + 1):
-            width_subcollection = [[]]
+            width_subcollection = [[], ]
             for gc in range(0, self._max_gc + 1, 2):
                 dimgroup_a = self._collection[width][gc]
                 dimgroup_b = self._collection[width][gc + 1]
@@ -27,4 +28,14 @@ class ExCircDistiller:
                 exc_dg = Circuit.filter_duplicates(exc_dg_a + exc_dg_b)
                 width_subcollection.append(exc_dg)
             exc_collection.append(width_subcollection)
-        return exc_collection
+        self._excirc_collection = exc_collection
+
+    def _generate_empty_lines(self):
+        exc_collection = self._excirc_collection
+        exc_collection_extensions: ExcCollection = [
+            [[] for _ in range(self._max_gc + 1)] for _ in range(self._max_width + 1)
+        ]
+        for width, width_subcollection in enumerate(exc_collection):
+            for gc, dimgroup in enumerate(width_subcollection):
+                for circ in dimgroup:
+                    dimgroup_extensions += circ.empty_line_extensions()
