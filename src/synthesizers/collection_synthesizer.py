@@ -1,25 +1,35 @@
 from circuit.circuit import Circuit
-from synthesizers.dimgroup_synthesizer import DimGroupSynthesizer, DimGroup
+from circuit.dim_group import DimGroup
+from synthesizers.dimgroup_synthesizer import DimGroupSynthesizer
 from itertools import product
 from timeit import default_timer as timer
 from pickle import dump
 from os.path import join
 
-Collection = list[list[DimGroup]]
+
+class Collection:
+    def __init__(self, max_width: int, max_gate_count: int):
+        self._max_width = max_width
+        self._max_gate_count = max_gate_count
+        self._groups = [
+            [DimGroup(width, gc) for gc in range(max_gate_count + 1)] for width in range(max_width + 1)
+        ]
+
+    def __len__(self) -> int:
+        return len(self._groups)
+
+    def __getitem__(self, key: int) -> list[DimGroup]:
+        return self._groups[key]
 
 
 class CollectionSynthesizer:
     def __init__(self, max_width: int, max_gate_count: int):
         self._max_width = max_width
         self._max_gate_count = max_gate_count
-        self._collection: Collection = [
-            [[] for _ in range(max_gate_count + 1)]
-        ]
+        self._collection = Collection(max_width, max_gate_count)
 
     def synthesize(self, threads_num: int = 1) -> Collection:
         for width in range(1, self._max_width + 1):
-            set_width_subcollection = [[], []]  # gc in {0,1}
-            self._collection.append(set_width_subcollection)
             for gc in range(2, self._max_gate_count + 1):
                 dgs = DimGroupSynthesizer(width, gc)
                 start = timer()
@@ -30,7 +40,7 @@ class CollectionSynthesizer:
                 dgs_time = timer() - start
                 print("-----------------------------------------")
                 print(f"TOTAL RT:       {dgs_time:6.2f}s -- {len(dimgroup):7} circuits")
-                set_width_subcollection.append(dimgroup)
+                self._collection._groups[width][gc] = dimgroup
                 if self._save:
                     with open(f"{self._file_prefix}_{width}_{gc}.pickle", "wb") as f:
                         dump(self._collection, f)
@@ -47,9 +57,9 @@ class CollectionSynthesizer:
         if gc >= 4:
             for left_gc in range(2, gc - 1):
                 right_gc = gc - left_gc
-                left_dimgroup = self._collection[width][left_gc]
-                right_dimgroup = self._collection[width][right_gc]
-                for left_gate, right_gate in product(left_dimgroup, right_dimgroup):
+                left_dimgroup = self._collection._groups[width][left_gc]
+                right_dimgroup = self._collection._groups[width][right_gc]
+                for left_gate, right_gate in product(left_dimgroup._circuits, right_dimgroup._circuits):
                     generated.append(left_gate + right_gate)
         if len(generated) > 0:
             generated = generated[0].unroll(generated)

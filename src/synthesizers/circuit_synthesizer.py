@@ -126,14 +126,14 @@ class CircuitSynthesizer:
             self._cnf.atleast(line_controls, 1)
         return self
 
-    def set_global_controls_num(self, controls_num: int):
+    def set_global_controls_num(self, controls_num: int) -> "CircuitSynthesizer":
         assert 0 <= controls_num and controls_num <= (self._width - 1) * self._gate_count
         self._global_controls_num = controls_num
         all_controls = reduce(lambda x, y: x+y, self._controls)
         self._cnf.exactly(all_controls, controls_num)
         return self
 
-    def solve(self):
+    def solve(self) -> Circuit | None:
         if self._circuit is None:
             line_iter = range(self._width)
             gate_iter = range(self._gate_count)

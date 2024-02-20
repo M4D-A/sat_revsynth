@@ -2,12 +2,12 @@ from sat.solver import Solver
 from synthesizers.circuit_synthesizer import CircuitSynthesizer
 from truth_table.truth_table import TruthTable
 from circuit.circuit import Circuit
+from circuit.dim_group import DimGroup
 from multiprocessing import Pool
 from timeit import default_timer as timer
-DimGroup = list[Circuit]
 
 
-class PartialSynthesiser:
+class PartialSynthesizer:
     def __init__(self, width: int, gate_count: int):
         self._width = width
         self._gate_count = gate_count
@@ -19,23 +19,22 @@ class PartialSynthesiser:
         self._synthesizer.disable_empty_lines()
         self._synthesizer.disable_full_control_lines()
 
-    def synthesize(self) -> tuple[list[Circuit], float, float]:
+    def synthesize(self) -> tuple[DimGroup, float, float]:
         synth_start = timer()
         circuit = self._synthesizer.solve()
         synth_time = timer() - synth_start
-        if (circuit):
-            unroll_start = timer()
-            equivalents = circuit.unroll()
-            unroll_time = timer() - unroll_start
-            return equivalents, synth_time, unroll_time
-        else:
-            return [], synth_time, 0.0
+        dg = DimGroup(self._width, self._width)
+        unroll_start = timer()
+        if (bool(circuit)):
+            dg._circuits = circuit.unroll()
+        unroll_time = timer() - unroll_start
+        return dg, synth_time, unroll_time
 
-    def restrict_global_controls(self, controls_num: int):
+    def restrict_global_controls(self, controls_num: int) -> "PartialSynthesizer":
         self._synthesizer.set_global_controls_num(controls_num)
         return self
 
-    def exclude_subcircuit(self, circuit: Circuit):
+    def exclude_subcircuit(self, circuit: Circuit) -> "PartialSynthesizer":
         self._synthesizer.exclude_subcircuit(circuit)
         return self
 
@@ -45,28 +44,28 @@ class DimGroupSynthesizer:
         self._width = width
         self._gate_count = gate_count
 
-    def synthesize(self, controls_num: int | None = None) -> list[Circuit]:
+    def synthesize(self, controls_num: int | None = None) -> DimGroup:
         cnum = controls_num
-        dim_group = []
+        dg = DimGroup(self._width, self._width)
         gst = 0.0
         gut = 0.0
         while True:
-            ps = PartialSynthesiser(self._width, self._gate_count)
+            ps = PartialSynthesizer(self._width, self._gate_count)
             if cnum is not None:
                 ps.restrict_global_controls(cnum)
-            for circuit in dim_group:
+            for circuit in dg:
                 ps.exclude_subcircuit(circuit)
-            dim_partial_group, st, ut = ps.synthesize()
+            partial_dg, st, ut = ps.synthesize()
             gst += st
             gut += ut
-            if (dim_partial_group):
-                dim_group += dim_partial_group
+            if (bool(partial_dg)):
+                dg.extend(partial_dg)
             else:
                 break
-        print(f"- {cnum:2}: {gst:6.2f}s / {gut:6.2f}s -- {len(dim_group): 7}")
-        return dim_group
+        print(f"- {cnum:2}: {gst:6.2f}s / {gut:6.2f}s -- {len(dg): 7}")
+        return dg
 
-    def synthesize_mt(self, threads: int):
+    def synthesize_mt(self, threads: int) -> DimGroup:
         width = self._width
         gate_count = self._gate_count
         max_controls_num = (width - 1) * gate_count
@@ -75,7 +74,7 @@ class DimGroupSynthesizer:
         with Pool(threads) as p:
             results = list(p.map(self.synthesize, controls_num_range))
 
-        dim_group = []
+        dg = DimGroup(self._width, self._width)
         for subgroup in results:
-            dim_group += subgroup
-        return dim_group
+            dg.extend(subgroup)
+        return dg
