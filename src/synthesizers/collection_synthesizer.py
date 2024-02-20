@@ -18,6 +18,7 @@ class CollectionSynthesizer:
             for gc in range(2, self._max_gate_count + 1):
                 dgs = DimGroupSynthesizer(width, gc)
                 start = timer()
+                initial = self._construct_from_previous(width, gc)
                 print()
                 print(f"(W, GC) = ({width}, {gc})")
                 print("-----------------------------------------")
@@ -25,7 +26,7 @@ class CollectionSynthesizer:
                 dgs_time = timer() - start
                 print("-----------------------------------------")
                 print(f"TOTAL RT:       {dgs_time:6.2f}s -- {len(dimgroup):7} circuits")
-                self._collection._groups[width][gc] = dimgroup
+                self._collection[width][gc] = dimgroup
                 if self._save:
                     with open(f"{self._file_prefix}_{width}_{gc}.pickle", "wb") as f:
                         dump(self._collection, f)
@@ -42,9 +43,9 @@ class CollectionSynthesizer:
         if gc >= 4:
             for left_gc in range(2, gc - 1):
                 right_gc = gc - left_gc
-                left_dimgroup = self._collection._groups[width][left_gc]
-                right_dimgroup = self._collection._groups[width][right_gc]
-                for left_gate, right_gate in product(left_dimgroup._circuits, right_dimgroup._circuits):
+                left_dimgroup = self._collection[width][left_gc]
+                right_dimgroup = self._collection[width][right_gc]
+                for left_gate, right_gate in product(left_dimgroup, right_dimgroup):
                     generated.append(left_gate + right_gate)
         if len(generated) > 0:
             generated = generated[0].unroll(generated)
