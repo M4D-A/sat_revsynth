@@ -8,6 +8,7 @@ from functools import reduce
 from truth_table.truth_table import TruthTable
 from utils.inplace import inplace
 from collections import deque
+from math import ceil
 
 Gate = tuple[list[int], int]  # Gate in integer representation
 
@@ -230,3 +231,11 @@ class Circuit:
 
         equivalents = Circuit.filter_duplicates(equivalents)
         return equivalents
+
+    def slice(self, start: int, end: int):
+        new = Circuit(self._width)
+        new._gates = self._gates[start:end]
+        return new
+
+    def min_slice(self):
+        return self.slice(0, len(self) // 2 + 1)

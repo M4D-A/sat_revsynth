@@ -3,6 +3,7 @@ from dimgroup_synthesizer.dimgroup_synthesizer import DimGroupSynthesizer, DimGr
 from itertools import product
 from timeit import default_timer as timer
 from pickle import dump
+from os.path import join
 
 Collection = list[list[DimGroup]]
 
@@ -30,9 +31,16 @@ class CollectionSynthesizer:
                 print("-----------------------------------------")
                 print(f"TOTAL RT:       {dgs_time:6.2f}s -- {len(dimgroup):7} circuits")
                 set_width_subcollection.append(dimgroup)
-                with open(f"/home/adam/data/collection_{width}_{gc}.pickle", "wb") as f:
-                    dump(self._collection, f)
+                if self._save:
+                    with open(f"{self._file_prefix}_{width}_{gc}.pickle", "wb") as f:
+                        dump(self._collection, f)
         return self._collection
+
+    def set_file_save(self, dir: str, collection_name: str):
+        self._dir = dir
+        self._collection_name = collection_name
+        self._file_prefix = join(dir, collection_name)
+        self._save = True
 
     def _construct_from_previous(self, width: int, gc: int) -> list[Circuit]:
         generated = []
