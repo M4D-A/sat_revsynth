@@ -26,7 +26,7 @@ class PartialSynthesizer:
         dg = DimGroup(self._width, self._width)
         unroll_start = timer()
         if (bool(circuit)):
-            dg._circuits = circuit.unroll()
+            dg.extend(circuit.unroll())
         unroll_time = timer() - unroll_start
         return dg, synth_time, unroll_time
 
@@ -59,7 +59,7 @@ class DimGroupSynthesizer:
             gst += st
             gut += ut
             if (bool(partial_dg)):
-                dg.extend(partial_dg)
+                dg.join(partial_dg)
             else:
                 break
         print(f"- {cnum:2}: {gst:6.2f}s / {gut:6.2f}s -- {len(dg): 7}")
@@ -76,5 +76,5 @@ class DimGroupSynthesizer:
 
         dg = DimGroup(self._width, self._width)
         for subgroup in results:
-            dg.extend(subgroup)
+            dg.join(subgroup)
         return dg
