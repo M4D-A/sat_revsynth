@@ -258,7 +258,7 @@ class Circuit:
             new.mcx(new_controls, new_target)
         return new
 
-    def empty_line_extensions(self, target_width: int):
+    def empty_line_extensions(self, target_width: int) -> list["Circuit"]:
         lines_to_insert = target_width - self._width
         assert lines_to_insert >= 0
         extensions = []
@@ -269,7 +269,7 @@ class Circuit:
             extensions.append(new)
         return extensions
 
-    def full_line_extensions(self, target_width: int):
+    def full_line_extensions(self, target_width: int) -> list["Circuit"]:
         lines_to_insert = target_width - self._width
         assert lines_to_insert >= 0
         extensions = []

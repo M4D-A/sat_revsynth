@@ -9,9 +9,9 @@ from pickle import load
 with open("/home/adam/data/test_1_3_5.pickle", "rb") as f:
     collection = load(f)
 
-for w, wsc in enumerate(collection):
-    for gc, dimg in enumerate(wsc):
-        print(f"({w}, {gc}): {len(dimg)}")
+# for w, wsc in enumerate(collection):
+#     for gc, dimg in enumerate(wsc):
+#         print(f"({w}, {gc}): {len(dimg)}")
 
 ecd = ExCircDistiller(collection)
 exc_collection = ecd.distill()
@@ -22,9 +22,3 @@ for w, wsc in enumerate(exc_collection):
         print(f"({w}, {gc}): {len(dimg)}")
         # for circ in dimg:
         #     print(circ)
-
-c = exc_collection[2][3][0]
-print(c)
-exts = c.empty_line_extensions(4)
-for e in exts:
-    print(e)
