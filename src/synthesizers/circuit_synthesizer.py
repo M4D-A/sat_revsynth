@@ -9,7 +9,7 @@ from functools import reduce
 LiteralGrid = list[list[Literal]]
 
 
-class Synthesizer:
+class CircuitSynthesizer:
     def __init__(self,
                  output: TruthTable,
                  gate_count: int,
@@ -98,7 +98,7 @@ class Synthesizer:
             exclusion_list += [c_literal, t_literal]
         return exclusion_list
 
-    def exclude_subcircuit(self, circuit: Circuit) -> "Synthesizer":
+    def exclude_subcircuit(self, circuit: Circuit) -> "CircuitSynthesizer":
         if circuit._exclusion_list is None:
             gates = circuit.gates()
             exclusion_list: list[int] = []
@@ -108,7 +108,7 @@ class Synthesizer:
         self._cnf.exclude_by_values(circuit._exclusion_list)
         return self
 
-    def disable_empty_lines(self) -> "Synthesizer":
+    def disable_empty_lines(self) -> "CircuitSynthesizer":
         line_iter = range(self._width)
         gate_iter = range(self._gate_count)
         for lid in line_iter:
@@ -118,7 +118,7 @@ class Synthesizer:
             self._cnf.atleast(line_variables, 1)
         return self
 
-    def disable_full_control_lines(self) -> "Synthesizer":
+    def disable_full_control_lines(self) -> "CircuitSynthesizer":
         line_iter = range(self._width)
         gate_iter = range(self._gate_count)
         for lid in line_iter:

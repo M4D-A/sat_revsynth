@@ -1,5 +1,5 @@
 from sat.solver import Solver
-from synthesizer.synthesizer import Synthesizer
+from synthesizers.circuit_synthesizer import CircuitSynthesizer
 from truth_table.truth_table import TruthTable
 from circuit.circuit import Circuit
 from multiprocessing import Pool
@@ -11,7 +11,7 @@ class PartialSynthesiser:
     def __init__(self, width: int, gate_count: int):
         self._width = width
         self._gate_count = gate_count
-        self._synthesizer = Synthesizer(
+        self._synthesizer = CircuitSynthesizer(
             TruthTable(width),
             self._gate_count,
             solver=Solver("kissat")
