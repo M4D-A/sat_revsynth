@@ -3,10 +3,12 @@ from circuit.dim_group import DimGroup
 
 class Collection:
     def __init__(self, max_width: int, max_gate_count: int):
-        self._max_width = max_width
-        self._max_gate_count = max_gate_count
+        mw = max_width
+        mgc = max_gate_count
+        self._max_width = mw
+        self._max_gate_count = mgc
         self._groups = [
-            [DimGroup(width, gc) for gc in range(max_gate_count + 1)] for width in range(max_width + 1)
+            [DimGroup(width, gc) for gc in range(mgc + 1)] for width in range(mw + 1)
         ]
 
     def __len__(self) -> int:

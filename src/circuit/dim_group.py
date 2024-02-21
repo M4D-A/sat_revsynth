@@ -17,7 +17,8 @@ class DimGroup:
         return bool(self._circuits)
 
     def append(self, other: Circuit):
-        assert (self._width, self._gate_count) == (other._width, len(other))
+        msg = f"({self._width}, {self._gate_count}) != ({other._width}, {len(other)})"
+        assert (self._width, self._gate_count) == (other._width, len(other)), msg
         self._circuits.append(other)
 
     def extend(self, other: list[Circuit]):
@@ -25,5 +26,6 @@ class DimGroup:
             self.append(circ)
 
     def join(self, other: "DimGroup"):
-        assert (self._width, self._gate_count) == (other._width, other._gate_count)
+        msg = f"({self._width}, {self._gate_count}) != ({other._width}, {other._gate_count})"
+        assert (self._width, self._gate_count) == (other._width, other._gate_count), msg
         self._circuits += other._circuits

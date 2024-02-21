@@ -18,7 +18,6 @@ class CollectionSynthesizer:
             for gc in range(2, self._max_gate_count + 1):
                 dgs = DimGroupSynthesizer(width, gc)
                 start = timer()
-                initial = self._construct_from_previous(width, gc)
                 print()
                 print(f"(W, GC) = ({width}, {gc})")
                 print("-----------------------------------------")
@@ -38,15 +37,15 @@ class CollectionSynthesizer:
         self._file_prefix = join(dir, collection_name)
         self._save = True
 
-    def _construct_from_previous(self, width: int, gc: int) -> list[Circuit]:
-        generated = []
-        if gc >= 4:
-            for left_gc in range(2, gc - 1):
-                right_gc = gc - left_gc
-                left_dimgroup = self._collection[width][left_gc]
-                right_dimgroup = self._collection[width][right_gc]
-                for left_gate, right_gate in product(left_dimgroup, right_dimgroup):
-                    generated.append(left_gate + right_gate)
-        if len(generated) > 0:
-            generated = generated[0].unroll(generated)
-        return generated
+    # def _construct_from_previous(self, width: int, gc: int) -> list[Circuit]:
+    #     generated = []
+    #     if gc >= 4:
+    #         for left_gc in range(2, gc - 1):
+    #             right_gc = gc - left_gc
+    #             left_dimgroup = self._collection[width][left_gc]
+    #             right_dimgroup = self._collection[width][right_gc]
+    #             for left_gate, right_gate in product(left_dimgroup, right_dimgroup):
+    #                 generated.append(left_gate + right_gate)
+    #     if len(generated) > 0:
+    #         generated = generated[0].unroll(generated)
+    #     return generated

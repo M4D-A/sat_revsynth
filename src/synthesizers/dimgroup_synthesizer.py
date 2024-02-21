@@ -23,7 +23,7 @@ class PartialSynthesizer:
         synth_start = timer()
         circuit = self._synthesizer.solve()
         synth_time = timer() - synth_start
-        dg = DimGroup(self._width, self._width)
+        dg = DimGroup(self._width, self._gate_count)
         unroll_start = timer()
         if (bool(circuit)):
             dg.extend(circuit.unroll())
@@ -46,7 +46,7 @@ class DimGroupSynthesizer:
 
     def synthesize(self, controls_num: int | None = None) -> DimGroup:
         cnum = controls_num
-        dg = DimGroup(self._width, self._width)
+        dg = DimGroup(self._width, self._gate_count)
         gst = 0.0
         gut = 0.0
         while True:
@@ -62,7 +62,7 @@ class DimGroupSynthesizer:
                 dg.join(partial_dg)
             else:
                 break
-        print(f"- {cnum:2}: {gst:6.2f}s / {gut:6.2f}s -- {len(dg): 7}")
+        print(f"- {cnum:2}: {gst:6.2f}s / {gut:6.2f}s -- {len(dg):7}")
         return dg
 
     def synthesize_mt(self, threads: int) -> DimGroup:
@@ -74,7 +74,7 @@ class DimGroupSynthesizer:
         with Pool(threads) as p:
             results = list(p.map(self.synthesize, controls_num_range))
 
-        dg = DimGroup(self._width, self._width)
+        dg = DimGroup(self._width, self._gate_count)
         for subgroup in results:
             dg.join(subgroup)
         return dg
