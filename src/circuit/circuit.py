@@ -1,7 +1,4 @@
-from warnings import catch_warnings, filterwarnings
-with catch_warnings():
-    filterwarnings("ignore", category=DeprecationWarning)
-    from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit
 from copy import copy, deepcopy
 from itertools import permutations, combinations
 from functools import reduce
@@ -19,22 +16,6 @@ class Circuit:
         self._tt: TruthTable | None = None
         self._gates: list[Gate] = []
         self._exclusion_list: None | list[int] = None
-
-    def width(self) -> int:
-        return self._width
-
-    def tt(self) -> TruthTable:
-        if self._tt is None:
-            self._tt = TruthTable(self._width)
-            for controls, target in self._gates:
-                self._tt.mcx(controls, target)
-        return self._tt
-
-    def gates(self) -> list[Gate]:
-        return self._gates
-
-    def controls_num(self) -> int:
-        return reduce(lambda x, y: x + len(y[0]), self._gates, 0)
 
     def __copy__(self) -> "Circuit":
         new = Circuit(self._width)
@@ -67,6 +48,37 @@ class Circuit:
 
     def __getitem__(self, id) -> Gate:
         return self._gates[id]
+
+    def width(self) -> int:
+        return self._width
+
+    def tt(self) -> TruthTable:
+        if self._tt is None:
+            self._tt = TruthTable(self._width)
+            for controls, target in self._gates:
+                self._tt.mcx(controls, target)
+        return self._tt
+
+    def gates(self) -> list[Gate]:
+        return self._gates
+
+    def controls_num(self) -> int:
+        return reduce(lambda x, y: x + len(y[0]), self._gates, 0)
+
+    def gate_swappable(self, index, ignore_identical: bool = True) -> bool:
+        lhs = self._gates[index]
+        rhs = self._gates[(index + 1) % len(self)]
+        if ignore_identical and lhs == rhs:
+            return False
+        lhs_controls, lhs_target = lhs
+        rhs_controls, rhs_target = rhs
+        lhs_collision = lhs_target in rhs_controls
+        rhs_collision = rhs_target in lhs_controls
+        return not (lhs_collision) and not (rhs_collision)
+
+    def swappable_gates(self, ignore_identical: bool = True) -> list[int]:
+        indices = [i for i in range(len(self)) if self.gate_swappable(i, ignore_identical)]
+        return indices
 
     @classmethod
     def filter_duplicates(cls, unfiltered: list["Circuit"]) -> list["Circuit"]:
@@ -141,6 +153,32 @@ class Circuit:
         new._gates[id], new._gates[next_id] = new._gates[next_id], new._gates[id]
         return new
 
+    def slice(self, start: int, end: int) -> "Circuit":
+        new = Circuit(self._width)
+        new._gates = self._gates[start:end]
+        return new
+
+    def min_slice(self) -> "Circuit":
+        return self.slice(0, len(self) // 2 + 1)
+
+    def add_empty_line(self, line_id: int) -> "Circuit":
+        assert 0 <= line_id and line_id <= self._width
+        new = Circuit(self._width + 1)
+        for controls, target in self._gates:
+            new_target = target if line_id > target else target + 1
+            new_controls = [(c if line_id > c else c + 1) for c in controls]
+            new.mcx(new_controls, new_target)
+        return new
+
+    def add_full_line(self, line_id: int) -> "Circuit":
+        assert 0 <= line_id and line_id <= self._width
+        new = Circuit(self._width + 1)
+        for controls, target in self._gates:
+            new_target = target if line_id > target else target + 1
+            new_controls = [(c if line_id > c else c + 1) for c in controls] + [line_id]
+            new.mcx(new_controls, new_target)
+        return new
+
     def rotations(self) -> list["Circuit"]:
         equivalents = [self.rotate(s) for s in range(len(self))]
         unique = self.filter_duplicates(equivalents)
@@ -151,21 +189,6 @@ class Circuit:
         equivalents = [self.permute(list(perm)) for perm in all_permutations]
         unique = self.filter_duplicates(equivalents)
         return unique
-
-    def gate_swappable(self, index, ignore_identical: bool = True) -> bool:
-        lhs = self._gates[index]
-        rhs = self._gates[(index + 1) % len(self)]
-        if ignore_identical and lhs == rhs:
-            return False
-        lhs_controls, lhs_target = lhs
-        rhs_controls, rhs_target = rhs
-        lhs_collision = lhs_target in rhs_controls
-        rhs_collision = rhs_target in lhs_controls
-        return not (lhs_collision) and not (rhs_collision)
-
-    def swappable_gates(self, ignore_identical: bool = True) -> list[int]:
-        indices = [i for i in range(len(self)) if self.gate_swappable(i, ignore_identical)]
-        return indices
 
     def swaps(self) -> list["Circuit"]:
         swap_ids = self.swappable_gates()
@@ -231,32 +254,6 @@ class Circuit:
 
         equivalents = Circuit.filter_duplicates(equivalents)
         return equivalents
-
-    def slice(self, start: int, end: int):
-        new = Circuit(self._width)
-        new._gates = self._gates[start:end]
-        return new
-
-    def min_slice(self):
-        return self.slice(0, len(self) // 2 + 1)
-
-    def add_empty_line(self, line_id: int) -> "Circuit":
-        assert 0 <= line_id and line_id <= self._width
-        new = Circuit(self._width + 1)
-        for controls, target in self._gates:
-            new_target = target if line_id > target else target + 1
-            new_controls = [(c if line_id > c else c + 1) for c in controls]
-            new.mcx(new_controls, new_target)
-        return new
-
-    def add_full_line(self, line_id: int) -> "Circuit":
-        assert 0 <= line_id and line_id <= self._width
-        new = Circuit(self._width + 1)
-        for controls, target in self._gates:
-            new_target = target if line_id > target else target + 1
-            new_controls = [(c if line_id > c else c + 1) for c in controls] + [line_id]
-            new.mcx(new_controls, new_target)
-        return new
 
     def empty_line_extensions(self, target_width: int) -> list["Circuit"]:
         lines_to_insert = target_width - self._width
