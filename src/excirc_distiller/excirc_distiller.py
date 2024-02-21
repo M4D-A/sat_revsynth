@@ -14,15 +14,18 @@ class ExCircDistiller:
         return excircuits
 
     def _raw_excirc_collection(self):
-        extensions = Collection(self._max_width, self._max_exc_gc)
+        excircuits = Collection(self._max_width, self._max_exc_gc)
         for width in range(self._max_width + 1):
             for exc_gc in range(1, self._max_exc_gc + 1):
                 gc = (exc_gc - 1) * 2
+
                 dimgroup_a = self._collection[width][gc]
-                dimgroup_b = self._collection[width][gc + 1]
                 ext_list_a = [circ.min_slice() for circ in dimgroup_a]
+
+                dimgroup_b = self._collection[width][gc + 1] if gc < self._max_gate_count else []
                 ext_list_b = [circ.min_slice() for circ in dimgroup_b]
+
                 ext_list = ext_list_a + ext_list_b
                 ext_list = Circuit.filter_duplicates(ext_list)
-                extensions[width][exc_gc]._circuits = ext_list
-        return extensions
+                excircuits[width][exc_gc]._circuits = ext_list
+        return excircuits
