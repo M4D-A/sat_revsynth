@@ -1,5 +1,5 @@
 from circuit.circuit import Circuit
-from collection_synthesizer.collection_synthesizer import Collection
+from synthesizers.collection_synthesizer import Collection
 
 ExcDimGroup = list[Circuit]
 ExcCollection = list[list[ExcDimGroup]]
@@ -15,7 +15,6 @@ class ExCircDistiller:
 
     def distill(self):
         self._raw_excirc_collection()
-        self._generate_empty_lines()
         return self._excirc_collection
 
     def _raw_excirc_collection(self):
@@ -31,19 +30,3 @@ class ExCircDistiller:
                 width_subcollection.append(exc_dg)
             exc_collection.append(width_subcollection)
         self._excirc_collection = exc_collection
-
-    def _generate_empty_lines(self):
-        exc_collection = self._excirc_collection
-        exc_coll_extensions: ExcCollection = [
-            [[] for _ in range(self._max_gc + 1)] for _ in range(self._max_width + 1)
-        ]
-        for width, width_subcollection in enumerate(exc_collection):
-            for gc, dimgroup in enumerate(width_subcollection):
-                for circ in dimgroup:
-                    for target_width in range(width+1, self._max_width + 1):
-                        new_extensions = circ.empty_line_extensions(target_width)
-                        exc_coll_extensions[target_width][gc] += new_extensions
-
-        for width in range(self._max_width + 1):
-            for gc in range(self._max_ext_gc + 1):
-                exc_collection[width][gc] += exc_coll_extensions[width][gc]
