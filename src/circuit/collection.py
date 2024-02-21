@@ -1,9 +1,8 @@
 from circuit.dim_group import DimGroup
-from typing import Iterable
 from itertools import product
 
 
-class Collection(Iterable):
+class Collection():
     def __init__(self, max_width: int, max_gate_count: int):
         self._max_width = max_width
         self._max_gate_count = max_gate_count
@@ -11,7 +10,7 @@ class Collection(Iterable):
         self._gc_iter = range(max_gate_count + 1)
         self._group_ids_iter = product(self._w_iter, self._gc_iter)
         self._groups = [
-            [DimGroup(width, gc) for gc in self._w_iter] for width in self._gc_iter
+            [DimGroup(width, gc) for gc in self._gc_iter] for width in self._w_iter
         ]
 
     def __len__(self) -> int:

@@ -1,7 +1,5 @@
-from circuit.circuit import Circuit
 from circuit.collection import Collection
 from synthesizers.dimgroup_synthesizer import DimGroupSynthesizer
-from itertools import product
 from timeit import default_timer as timer
 from pickle import dump
 from os.path import join
