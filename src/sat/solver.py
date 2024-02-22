@@ -86,16 +86,18 @@ class Solver:
         assert p.stdout is not None
         out = p.stdout.read()
 
-        string = out.decode('utf-8').lower()
-        if "unsat" in string:
-            return (False, [])
-        else:
-            ids = self._extract_ints(string)
-            return (True, ids)
+        string = out.decode('utf-8')
+        return self._parse_solution(string)
 
     @staticmethod
-    def _extract_ints(string: str) -> list[int]:
+    def _parse_solution(string: str) -> Solution:
+        string = string.lower()
+        if "unsat" in string:
+            return (False, [])
+
         def is_int(s):
             return s.isdigit() or (s[0] == '-' and s[1:].isdigit())
+
         ints = [int(s) for s in string.split() if is_int(s)]
-        return [i for i in ints if i != 0]
+        ids = [i for i in ints if i != 0]
+        return (True, ids)

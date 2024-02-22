@@ -19,7 +19,7 @@ class Collection():
     def __getitem__(self, key: int) -> list[DimGroup]:
         return self._groups[key]
 
-    def _full_line_extensions(self):
+    def _full_line_extensions(self) -> "Collection":
         extensions = Collection(self._max_width, self._max_gate_count)
         for width, gc in self._group_ids_iter:
             dimgroup = self[width][gc]
@@ -29,7 +29,7 @@ class Collection():
                     extensions[target_width][gc].extend(new_extensions)
         return extensions
 
-    def _empty_line_extensions(self):
+    def _empty_line_extensions(self) -> "Collection":
         extensions = Collection(self._max_width, self._max_gate_count)
         for width, gc in self._group_ids_iter:
             dimgroup = self[width][gc]
@@ -39,10 +39,10 @@ class Collection():
                     extensions[target_width][gc].extend(new_extensions)
         return extensions
 
-    def _validate_collection(self, other: "Collection"):
+    def _validate_collection(self, other: "Collection") -> None:
         assert (self._max_width, self._max_gate_count) == (other._max_width, other._max_gate_count)
 
-    def join(self, other: "Collection"):
+    def join(self, other: "Collection") -> None:
         self._validate_collection(other)
         for width, gc in self._group_ids_iter:
             self[width][gc].join(other[width][gc])

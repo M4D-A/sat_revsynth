@@ -39,15 +39,15 @@ class Circuit:
     def __eq__(self, other) -> bool:
         return (self._width, self._gates) == (other._width, other._gates)
 
-    def __add__(self, other) -> "Circuit":
+    def __add__(self, other: "Circuit") -> "Circuit":
         assert self._width == other._width
         new_width = self._width
         new_circuit = Circuit(new_width)
         new_circuit._gates = self._gates + other._gates
         return new_circuit
 
-    def __getitem__(self, id) -> Gate:
-        return self._gates[id]
+    def __getitem__(self, key: int) -> Gate:
+        return self._gates[key]
 
     def width(self) -> int:
         return self._width
@@ -65,7 +65,7 @@ class Circuit:
     def controls_num(self) -> int:
         return reduce(lambda x, y: x + len(y[0]), self._gates, 0)
 
-    def gate_swappable(self, index, ignore_identical: bool = True) -> bool:
+    def gate_swappable(self, index: int, ignore_identical: bool = True) -> bool:
         lhs = self._gates[index]
         rhs = self._gates[(index + 1) % len(self)]
         if ignore_identical and lhs == rhs:
@@ -109,7 +109,7 @@ class Circuit:
         return self
 
     @inplace
-    def append(self, gate, **_) -> "Circuit":
+    def append(self, gate: Gate, **_) -> "Circuit":
         controls, target = gate
         self.mcx(controls, target)
         self._tt = None
