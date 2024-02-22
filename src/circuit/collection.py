@@ -1,5 +1,6 @@
 from circuit.dim_group import DimGroup
 from itertools import product
+from copy import copy
 
 
 class Collection():
@@ -19,23 +20,40 @@ class Collection():
     def __getitem__(self, key: int) -> list[DimGroup]:
         return self._groups[key]
 
-    def _full_line_extensions(self) -> "Collection":
-        extensions = Collection(self._max_width, self._max_gate_count)
-        for width, gc in self._group_ids_iter:
-            dimgroup = self[width][gc]
-            for circ in dimgroup:
-                for target_width in range(width + 1, self._max_width + 1):
-                    new_extensions = circ.full_line_extensions(target_width)
-                    extensions[target_width][gc].extend(new_extensions)
-        return extensions
+    def __str__(self) -> str:
+        string = ""
+        for width, gc in copy(self._group_ids_iter):
+            dimg = self[width][gc]
+            string += f"({width}, {gc}): {len(dimg)}\n"
+        return string
+
+    def fill_empty_line_extensions(self) -> "Collection":
+        extensions = self._empty_line_extensions()
+        self.join(extensions)
+        return self
+
+    def fill_full_line_extensions(self) -> "Collection":
+        extensions = self._full_line_extensions()
+        self.join(extensions)
+        return self
 
     def _empty_line_extensions(self) -> "Collection":
         extensions = Collection(self._max_width, self._max_gate_count)
-        for width, gc in self._group_ids_iter:
+        for width, gc in copy(self._group_ids_iter):
             dimgroup = self[width][gc]
             for circ in dimgroup:
                 for target_width in range(width + 1, self._max_width + 1):
                     new_extensions = circ.empty_line_extensions(target_width)
+                    extensions[target_width][gc].extend(new_extensions)
+        return extensions
+
+    def _full_line_extensions(self) -> "Collection":
+        extensions = Collection(self._max_width, self._max_gate_count)
+        for width, gc in copy(self._group_ids_iter):
+            dimgroup = self[width][gc]
+            for circ in dimgroup:
+                for target_width in range(width + 1, self._max_width + 1):
+                    new_extensions = circ.full_line_extensions(target_width)
                     extensions[target_width][gc].extend(new_extensions)
         return extensions
 
@@ -44,5 +62,5 @@ class Collection():
 
     def join(self, other: "Collection") -> None:
         self._validate_collection(other)
-        for width, gc in self._group_ids_iter:
+        for width, gc in copy(self._group_ids_iter):
             self[width][gc].join(other[width][gc])
