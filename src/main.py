@@ -9,10 +9,10 @@ for wsc in collection:
     for dg in wsc:
         print(f"({dg._width}, {dg._gate_count}): {len(dg)}")
 
-# ecd = ExCircDistiller(collection)
-# exc_collection = ecd.distill()
-#
-# print("-------")
-# for w, wsc in enumerate(exc_collection):
-#     for gc, dimg in enumerate(wsc):
-#         print(f"({w}, {gc}): {len(dimg)}")
+ecd = ExCircDistiller(collection)
+exc_collection = ecd.distill()
+
+print("-------")
+for wsc in exc_collection:
+    for dg in wsc:
+        print(f"({dg._width}, {dg._gate_count}): {len(dg)}")
