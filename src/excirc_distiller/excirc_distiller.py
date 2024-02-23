@@ -13,19 +13,24 @@ class ExCircDistiller:
         excircuits = self._raw_excirc_collection()
         excircuits.fill_empty_line_extensions()
         excircuits.remove_reducibles()
+        # excircuits.fill_full_line_extensions()
+        # excircuits.remove_reducibles()
         return excircuits
 
     def _raw_excirc_collection(self):
         excircuits = Collection(self._max_width, self._max_exc_gc)
         for width in range(self._max_width + 1):
             for exc_gc in range(1, self._max_exc_gc + 1):
+                print(f"REC {width}, {exc_gc}")
                 gc = (exc_gc - 1) * 2
 
                 dimgroup_a = self._collection[width][gc]
                 ext_list_a = [circ.min_slice() for circ in dimgroup_a]
+                ext_list_a = Circuit.filter_duplicates(ext_list_a)
 
                 dimgroup_b = self._collection[width][gc + 1] if gc < self._max_gate_count else []
                 ext_list_b = [circ.min_slice() for circ in dimgroup_b]
+                ext_list_b = Circuit.filter_duplicates(ext_list_b)
 
                 ext_list = ext_list_a + ext_list_b
                 ext_list = Circuit.filter_duplicates(ext_list)
