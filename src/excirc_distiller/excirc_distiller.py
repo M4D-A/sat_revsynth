@@ -12,6 +12,7 @@ class ExCircDistiller:
     def distill(self):
         excircuits = self._raw_excirc_collection()
         excircuits.fill_empty_line_extensions()
+        excircuits.remove_reducibles()
         return excircuits
 
     def _raw_excirc_collection(self):

@@ -80,6 +80,19 @@ class Circuit:
         indices = [i for i in range(len(self)) if self.gate_swappable(i, ignore_identical)]
         return indices
 
+    def contains(self, subcircuit: "Circuit") -> bool:
+        assert self._width == subcircuit._width
+        inner_len = len(subcircuit)
+        len_diff = len(self) - inner_len
+        for i in range(0, len_diff + 1):
+            slice = self._gates[i: i + inner_len]
+            if subcircuit._gates == slice:
+                return True
+        return False
+
+    def reducible(self, subcircuits: list["Circuit"]) -> bool:
+        return any(self.contains(subc) for subc in subcircuits)
+
     @classmethod
     def filter_duplicates(cls, unfiltered: list["Circuit"]) -> list["Circuit"]:
         return [circ for i, circ in enumerate(unfiltered) if circ not in unfiltered[:i]]

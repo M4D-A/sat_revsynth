@@ -37,6 +37,14 @@ class Collection():
         self.join(extensions)
         return self
 
+    def remove_reducibles(self) -> "Collection":
+        for width, reducing_gc in copy(self._group_ids_iter):
+            reducing_dg = self[width][reducing_gc]
+            for reducted_gc in range(reducing_gc + 1, self._max_gate_count + 1):
+                reducted_dg = self[width][reducted_gc]
+                reducted_dg.remove_reducibles(reducing_dg)
+        return self
+
     def _empty_line_extensions(self) -> "Collection":
         extensions = Collection(self._max_width, self._max_gate_count)
         for width, gc in copy(self._group_ids_iter):

@@ -35,3 +35,9 @@ class DimGroup:
     def join(self, other: "DimGroup") -> None:
         self._validate_dimgroup(other)
         self._circuits += other._circuits
+
+    def remove_reducibles(self, reductors: "DimGroup"):
+        assert reductors._width == self._width
+        assert reductors._gate_count < self._gate_count
+        irreducible = [circ for circ in self._circuits if not circ.reducible(reductors._circuits)]
+        self._circuits = irreducible
