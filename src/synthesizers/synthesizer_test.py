@@ -2,7 +2,8 @@ import pytest
 from random import randint, sample
 from sat.solver import Solver
 from truth_table.truth_table import TruthTable
-from synthesizer.synthesizer import Synthesizer
+from synthesizers.circuit_synthesizer import CircuitSynthesizer
+
 
 solver_names = Solver.builtin_solvers.keys()
 solvers = [Solver(solver_name) for solver_name in solver_names]
@@ -38,7 +39,7 @@ def identity_tt(bits_num):
 @pytest.mark.parametrize("solver", solvers)
 @pytest.mark.parametrize("bits_num", bits_num_randomizer)
 def test_empty(solver, identity_tt):
-    synthesizer = Synthesizer(identity_tt, 0, solver)
+    synthesizer = CircuitSynthesizer(identity_tt, 0, solver)
     circuit = synthesizer.solve()
     assert circuit is not None
     assert len(circuit) == 0
@@ -49,7 +50,7 @@ def test_empty(solver, identity_tt):
 @pytest.mark.parametrize("bits_num", bits_num_randomizer)
 def test_single_x(solver, identity_tt, x_params):
     tt = identity_tt.x(x_params, inplace=False)
-    synthesizer = Synthesizer(tt, 1, solver)
+    synthesizer = CircuitSynthesizer(tt, 1, solver)
     circuit = synthesizer.solve()
     assert circuit is not None
     assert len(circuit) == 1
@@ -63,7 +64,7 @@ def test_single_x(solver, identity_tt, x_params):
 @pytest.mark.parametrize("bits_num", bits_num_randomizer)
 def test_single_cx(solver, identity_tt, cx_params):
     tt = identity_tt.cx(*cx_params, inplace=False)
-    synthesizer = Synthesizer(tt, 1, solver)
+    synthesizer = CircuitSynthesizer(tt, 1, solver)
     circuit = synthesizer.solve()
     assert circuit is not None
     assert len(circuit) == 1
@@ -77,7 +78,7 @@ def test_single_cx(solver, identity_tt, cx_params):
 @pytest.mark.parametrize("bits_num", bits_num_randomizer)
 def test_single_mcx(solver, identity_tt, mcx_params):
     tt = identity_tt.mcx(*mcx_params, inplace=False)
-    synthesizer = Synthesizer(tt, 1, solver)
+    synthesizer = CircuitSynthesizer(tt, 1, solver)
     circuit = synthesizer.solve()
     assert circuit is not None
     assert len(circuit) == 1

@@ -1,8 +1,11 @@
-from collection_synthesizer.collection_synthesizer import CollectionSynthesizer
+from synthesizers.collection_synthesizer import CollectionSynthesizer
+from excirc_distiller.excirc_distiller import ExCircDistiller
 
-cs = CollectionSynthesizer(3, 5)
+cs = CollectionSynthesizer(3, 7)
 collection = cs.synthesize(16)
 
-for w, wsc in enumerate(collection):
-    for gc, dimg in enumerate(wsc):
-        print(f"({w}, {gc}): {len(dimg)}")
+ecd = ExCircDistiller(collection)
+exc_collection = ecd.distill()
+print()
+print("----------")
+print(exc_collection)
