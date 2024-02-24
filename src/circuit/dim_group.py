@@ -38,6 +38,9 @@ class DimGroup:
 
     def remove_reducibles(self, reductors: "DimGroup"):
         assert reductors._width == self._width
-        assert reductors._gate_count < self._gate_count
+        assert reductors._gate_count <= self._gate_count
         irreducible = [circ for circ in self._circuits if not circ.reducible(reductors._circuits)]
         self._circuits = irreducible
+
+    def remove_duplicates(self):
+        self._circuits = Circuit.filter_duplicates(self._circuits)
