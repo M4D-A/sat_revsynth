@@ -3,7 +3,7 @@ from itertools import product
 from copy import copy
 
 
-class Collection():
+class Collection:
     def __init__(self, max_width: int, max_gate_count: int):
         self._max_width = max_width
         self._max_gate_count = max_gate_count
@@ -39,6 +39,7 @@ class Collection():
 
     def remove_reducibles(self) -> "Collection":
         for width, reducing_gc in copy(self._group_ids_iter):
+            print(f"  -- RMD({width}, {reducing_gc})")
             reducing_dg = self[width][reducing_gc]
             for reducted_gc in range(reducing_gc + 1, self._max_gate_count + 1):
                 reducted_dg = self[width][reducted_gc]
@@ -47,12 +48,14 @@ class Collection():
 
     def remove_duplicates(self) -> "Collection":
         for width, gc in copy(self._group_ids_iter):
+            print(f"  -- RMD({width}, {gc})")
             self[width][gc].remove_duplicates()
         return self
 
     def _empty_line_extensions(self) -> "Collection":
         extensions = Collection(self._max_width, self._max_gate_count)
         for width, gc in copy(self._group_ids_iter):
+            print(f"  -- FEL({width}, {gc})")
             dimgroup = self[width][gc]
             for circ in dimgroup:
                 for target_width in range(width + 1, self._max_width + 1):
@@ -63,6 +66,7 @@ class Collection():
     def _full_line_extensions(self) -> "Collection":
         extensions = Collection(self._max_width, self._max_gate_count)
         for width, gc in copy(self._group_ids_iter):
+            print(f"  -- FFL({width}, {gc})")
             dimgroup = self[width][gc]
             for circ in dimgroup:
                 for target_width in range(width + 1, self._max_width + 1):
@@ -71,7 +75,10 @@ class Collection():
         return extensions
 
     def _validate_collection(self, other: "Collection") -> None:
-        assert (self._max_width, self._max_gate_count) == (other._max_width, other._max_gate_count)
+        assert (self._max_width, self._max_gate_count) == (
+            other._max_width,
+            other._max_gate_count,
+        )
 
     def join(self, other: "Collection") -> None:
         self._validate_collection(other)

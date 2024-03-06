@@ -17,7 +17,9 @@ class DimGroup:
         return bool(self._circuits)
 
     def _validate_circuit(self, circuit: Circuit) -> None:
-        msg = f"({self._width}, {self._gate_count}) != ({circuit._width}, {len(circuit)})"
+        msg = (
+            f"({self._width}, {self._gate_count}) != ({circuit._width}, {len(circuit)})"
+        )
         assert (self._width, self._gate_count) == (circuit._width, len(circuit)), msg
 
     def _validate_dimgroup(self, other: "DimGroup") -> None:
@@ -39,7 +41,9 @@ class DimGroup:
     def remove_reducibles(self, reductors: "DimGroup"):
         assert reductors._width == self._width
         assert reductors._gate_count <= self._gate_count
-        irreducible = [circ for circ in self._circuits if not circ.reducible(reductors._circuits)]
+        irreducible = [
+            circ for circ in self._circuits if not circ.reducible(reductors._circuits)
+        ]
         self._circuits = irreducible
 
     def remove_duplicates(self):

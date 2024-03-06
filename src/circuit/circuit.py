@@ -77,7 +77,9 @@ class Circuit:
         return not (lhs_collision) and not (rhs_collision)
 
     def swappable_gates(self, ignore_identical: bool = True) -> list[int]:
-        indices = [i for i in range(len(self)) if self.gate_swappable(i, ignore_identical)]
+        indices = [
+            i for i in range(len(self)) if self.gate_swappable(i, ignore_identical)
+        ]
         return indices
 
     def contains(self, subcircuit: "Circuit") -> bool:
@@ -213,7 +215,7 @@ class Circuit:
         visited.append(self)
         neighbours = self.swaps()
         for node in neighbours:
-            if not (node in visited):
+            if node not in visited:
                 node._dfs(visited)
 
     def swap_space_dfs(self) -> list["Circuit"]:
