@@ -119,7 +119,8 @@ std::vector<Circuit> nonReducible(const std::vector<Circuit> &lhs,
 
 void rmDuplicates(std::vector<Circuit> &structures) {
   std::sort(structures.begin(), structures.end());
-  structures.erase(std::unique(structures.begin(), structures.end()));
+  structures.erase(std::unique(structures.begin(), structures.end()),
+                   structures.end());
 }
 
 void rmReducible(Collection &collection) {
@@ -128,6 +129,7 @@ void rmReducible(Collection &collection) {
   for (int width = 0; width <= max_width; width++) {
     for (int red_gc = 0; red_gc <= max_gc; red_gc++) {
       const auto &red_dg = collection.circuits[width][red_gc];
+
       for (int target_gc = red_gc + 1; target_gc <= max_gc; target_gc++) {
         auto &target_dg = collection.circuits[width][target_gc];
         collection.circuits[width][target_gc] = nonReducible(target_dg, red_dg);
@@ -140,8 +142,8 @@ void rmDuplicates(Collection &collection) {
   int max_width = collection.max_width;
   int max_gc = collection.max_gc;
   for (int width = 0; width <= max_width; width++) {
-    for (int red_gc = 0; red_gc <= max_gc; red_gc++) {
-      auto &red_dg = collection.circuits[width][red_gc];
+    for (int gc = 0; gc <= max_gc; gc++) {
+      auto &red_dg = collection.circuits[width][gc];
       rmDuplicates(red_dg);
     }
   }
