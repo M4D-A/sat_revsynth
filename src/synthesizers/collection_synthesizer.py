@@ -9,6 +9,7 @@ class CollectionSynthesizer:
         self._max_width = max_width
         self._max_gate_count = max_gate_count
         self._collection = Collection(max_width, max_gate_count)
+        self._save = False
 
     def synthesize(self, threads_num: int = 1) -> Collection:
         for width in range(1, self._max_width + 1):

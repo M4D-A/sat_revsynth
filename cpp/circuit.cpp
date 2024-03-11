@@ -105,28 +105,16 @@ void Collection::print() const {
   }
 }
 
-void rmReducible(std::vector<Circuit> &lhs, const std::vector<Circuit> &rhs) {
-  auto it = lhs.begin();
-  while (it != lhs.end()) {
-    bool isReducible = false;
+std::vector<Circuit> nonReducible(const std::vector<Circuit> &lhs,
+                                  const std::vector<Circuit> &rhs) {
+  std::vector<Circuit> nonReducibles;
 
-    for (const auto &rhsStructure : rhs) {
-      try {
-        if (it->isSuper(rhsStructure)) {
-          isReducible = true;
-          break;
-        }
-      } catch (const std::runtime_error &e) {
-        // Ignore width and depth mismatch errors
-      }
-    }
-
-    if (isReducible) {
-      it = lhs.erase(it);
-    } else {
-      ++it;
+  for (const auto &lhs_circuit : lhs) {
+    if (!lhs_circuit.isReducible(rhs)) {
+      nonReducibles.push_back(lhs_circuit);
     }
   }
+  return nonReducibles;
 }
 
 void rmDuplicates(std::vector<Circuit> &structures) {
@@ -142,18 +130,19 @@ void rmReducible(Collection &collection) {
       const auto &red_dg = collection.circuits[width][red_gc];
       for (int target_gc = red_gc + 1; target_gc <= max_gc; target_gc++) {
         auto &target_dg = collection.circuits[width][target_gc];
-        rmReducible(target_dg, red_dg);
+        collection.circuits[width][target_gc] = nonReducible(target_dg, red_dg);
       }
     }
   }
 }
 
-// def remove_reducibles(self) -> "Collection":
-//     for width, reducing_gc in copy(self._group_ids_iter):
-//         print(f"  -- RMD({width}, {reducing_gc})")
-//         reducing_dg = self[width][reducing_gc]
-//         for reducted_gc in range(reducing_gc + 1, self._max_gate_count +
-//         1):
-//             reducted_dg = self[width][reducted_gc]
-//             reducted_dg.remove_reducibles(reducing_dg)
-//     return self
+void rmDuplicates(Collection &collection) {
+  int max_width = collection.max_width;
+  int max_gc = collection.max_gc;
+  for (int width = 0; width <= max_width; width++) {
+    for (int red_gc = 0; red_gc <= max_gc; red_gc++) {
+      auto &red_dg = collection.circuits[width][red_gc];
+      rmDuplicates(red_dg);
+    }
+  }
+}

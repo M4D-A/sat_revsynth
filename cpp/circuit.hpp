@@ -23,8 +23,11 @@ struct Collection {
   void print() const;
 };
 
-void rmReducible(std::vector<Circuit> &lhs, const std::vector<Circuit> &rhs);
+std::vector<Circuit> nonReducible(const std::vector<Circuit> &lhs,
+                                  const std::vector<Circuit> &rhs);
 
 void rmDuplicates(std::vector<Circuit> &structures);
 
 void rmReducible(Collection &collection);
+
+void rmDuplicates(Collection &collection);

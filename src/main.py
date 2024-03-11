@@ -1,15 +1,19 @@
 from excirc_distiller.excirc_distiller import ExCircDistiller
-from pickle import load
+from synthesizers.collection_synthesizer import CollectionSynthesizer
+# from utils.dump import circuit_dump_str, collection_dump_str
+# from pickle import load
 
-# cs = CollectionSynthesizer(4, 7)
-# cs.set_file_save("/home/adam/data", "test")
-# collection = cs.synthesize(16)
+# with open("/home/adam/data/test_3_7.pickle", "rb") as f:
+#     collection = load(f)
 
-with open("/home/adam/data/test_3_7.pickle", "rb") as f:
-    collection = load(f)
+sy = CollectionSynthesizer(3, 5)
+collection = sy.synthesize()
+print(collection)
 
-ecd = ExCircDistiller(collection)
-exc_collection = ecd.distill()
-print()
-print("----------")
-print(exc_collection)
+exc = ExCircDistiller(collection)
+
+exc_coll = exc.distill()
+print(exc_coll)
+
+# with open("/home/adam/dump_3_5.txt", "w") as f:
+#     f.write(collection_dump_str(exc_coll))

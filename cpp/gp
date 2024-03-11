@@ -1,0 +1,3 @@
+#!/bin/bash
+
+gprof2dot -s -z main -f callgrind ${1} | dot -Tpng -o output.png
