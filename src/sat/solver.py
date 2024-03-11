@@ -8,7 +8,7 @@ import queue
 
 class Solver:
     external_solvers = {
-        "kissat": [],
+        "kissat": ["-q"],
         # "cms":["--verb", "0"],
         # "parkissat": ["-v=1", "-c=8", "-max-memory=8"]
     }
