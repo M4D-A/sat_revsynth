@@ -1,9 +1,12 @@
 from circuit.circuit import Circuit, Gate
+from circuit.dim_group import DimGroup
+from circuit.collection import Collection
 from truth_table.truth_table import TruthTable
 from sat.cnf import CNF, Literal
 from sat.solver import Solver
 from itertools import product
 from functools import reduce
+from timeit import default_timer as timer
 
 
 LiteralGrid = list[list[Literal]]
@@ -93,7 +96,7 @@ class CircuitSynthesizer:
             exclusion_list += [c_literal, t_literal]
         return exclusion_list
 
-    def exclude_subcircuit(self, circuit: Circuit) -> "CircuitSynthesizer":
+    def exclude_solution(self, circuit: Circuit) -> "CircuitSynthesizer":
         if circuit._exclusion_list is None:
             gates = circuit.gates()
             exclusion_list: list[int] = []
@@ -128,7 +131,33 @@ class CircuitSynthesizer:
         self._cnf.exactly(all_controls, controls_num)
         return self
 
+    def exclude_subcircircuit(self, circuit: Circuit) -> "CircuitSynthesizer":
+        gates = circuit.gates()
+        outer_gc = self._gate_count
+        inner_gc = len(circuit)
+        max_shift = outer_gc - inner_gc
+        for shift in range(max_shift + 1):
+            exclusion_list: list[int] = []
+            for layer, gate in enumerate(gates):
+                exclusion_list += self._gate_exclusion_list(layer+shift, gate)
+            circuit._exclusion_list = exclusion_list
+            self._cnf.exclude_by_values(circuit._exclusion_list)
+        return self
+
+    def exclude_dimgroup(self, dimgroup: DimGroup) -> "CircuitSynthesizer":
+        for circuit in dimgroup:
+            self.exclude_subcircircuit(circuit)
+        return self
+
+    def exclude_collection(self, collection: Collection) -> "CircuitSynthesizer":
+        width = self._width
+        subcollection = collection[width]
+        for dg in subcollection[2:3]:
+            self.exclude_dimgroup(dg)
+        return self
+
     def solve(self) -> Circuit | None:
+        start = timer()
         if self._circuit is None:
             line_iter = range(self._width)
             gate_iter = range(self._gate_count)
@@ -137,6 +166,7 @@ class CircuitSynthesizer:
             targets = self._targets
             if not sat:
                 self.circuit = None
+                print(f"{self._gate_count}: {timer() - start}")
                 return self.circuit
             circuit = Circuit(self._width)
             for gid in gate_iter:
@@ -145,4 +175,5 @@ class CircuitSynthesizer:
                 assert len(g_targets) == 1
                 circuit.mcx(g_controls, g_targets[0])
             self._circuit = circuit
+        print(f"{self._gate_count}: {timer() - start}")
         return self._circuit

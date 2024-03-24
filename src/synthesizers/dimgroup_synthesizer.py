@@ -30,7 +30,7 @@ class PartialSynthesizer:
         return self
 
     def exclude_subcircuit(self, circuit: Circuit) -> "PartialSynthesizer":
-        self._synthesizer.exclude_subcircuit(circuit)
+        self._synthesizer.exclude_solution(circuit)
         return self
 
 
