@@ -2,7 +2,7 @@
 #include <string>
 
 int main() {
-  std::string filename = "/home/adam/dump_3_7.txt";
+  std::string filename = "/home/adam/clean_data/unfexc_3_7.txt";
   printf("Reading...");
   Collection coll(filename);
   printf("Done\n");
@@ -13,6 +13,7 @@ int main() {
   rmDuplicates(coll);
   printf("Done\n");
   coll.print();
+  coll.dump("/home/adam/clean_data/exc_3_7_cpp.txt");
 
   return 0;
 }

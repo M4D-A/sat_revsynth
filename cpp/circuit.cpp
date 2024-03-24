@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 bool Circuit::isSuper(const Circuit &rhs) const {
@@ -103,6 +104,34 @@ void Collection::print() const {
       std::cout << "(" << width << ", " << gc << "): " << len << std::endl;
     }
   }
+}
+
+void Collection::dump(const std::string &filename) {
+  std::ofstream file(filename);
+  if (!file) {
+    throw std::runtime_error("failed to open file");
+  }
+
+  // Write the header
+  file << "h " << max_width << " " << max_gc << std::endl << std::endl;
+
+  // Write each structure
+  for (int width = 0; width <= max_width; ++width) {
+    for (int depth = 0; depth <= max_gc; ++depth) {
+      for (const auto &structure : circuits[width][depth]) {
+        file << "c " << structure.width << " " << structure.gc << std::endl;
+        for (const auto &row : structure.literals) {
+          for (int literal : row) {
+            file << literal << " ";
+          }
+          file << std::endl;
+        }
+        file << std::endl;
+      }
+    }
+  }
+
+  file.close();
 }
 
 std::vector<Circuit> nonReducible(const std::vector<Circuit> &lhs,

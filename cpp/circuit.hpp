@@ -21,6 +21,7 @@ struct Collection {
 
   Collection(const std::string &filename);
   void print() const;
+  void dump(const std::string &filename);
 };
 
 std::vector<Circuit> nonReducible(const std::vector<Circuit> &lhs,
