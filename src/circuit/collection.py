@@ -1,4 +1,5 @@
 from circuit.dim_group import DimGroup
+from circuit.circuit import Circuit
 from itertools import product
 from copy import copy
 
@@ -84,3 +85,26 @@ class Collection:
         self._validate_collection(other)
         for width, gc in copy(self._group_ids_iter):
             self[width][gc].join(other[width][gc])
+
+    def from_file(self, file_name: str):
+        with open(file_name, 'r') as file:
+            for line in file:
+                match line.strip().split(' '):
+                    case ["h", max_width, max_gc]:
+                        assert int(max_width) == self._max_width
+                        assert int(max_gc) == self._max_gate_count
+                    case ["c", width, gc]:
+                        width = int(width)
+                        gc = int(gc)
+                        assert width <= self._max_width
+                        assert gc <= self._max_gate_count
+                        circuit = Circuit(width)
+                        for _ in range(gc):
+                            target, *controls = file.readline().strip().split(' ')
+                            circuit.mcx([int(c) for c in controls], int(target))
+                        self[width][gc].append(circuit)
+                    case ['']:
+                        pass
+                    case _:
+                        pass
+        return self
