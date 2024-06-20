@@ -5,11 +5,13 @@ from copy import copy
 
 
 class TruthTable:
-    def __init__(self, bits_num: int,
-                 values: list[int] | None = None,
-                 bits: list[list[int]] | None = None,
-                 ):
-        rows_num = 2 ** bits_num
+    def __init__(
+        self,
+        bits_num: int,
+        values: list[int] | None = None,
+        bits: list[list[int]] | None = None,
+    ):
+        rows_num = 2**bits_num
         assert values is None or bits is None
 
         if bits is None:
@@ -50,7 +52,9 @@ class TruthTable:
 
     def __str__(self):
         header = f"bits = {self._bits_num}, rows = {len(self)}\n\n"
-        rows = "\n".join([str(i) + ": " + str(row) for i, row in zip(self.values(), self._bits)])
+        rows = "\n".join(
+            [str(i) + ": " + str(row) for i, row in zip(self.values(), self._bits)]
+        )
         return header + rows
 
     def __getitem__(self, key):
@@ -67,27 +71,27 @@ class TruthTable:
     def value_to_row(cls, value: int, bits_num: int) -> list[int]:
         return [(value >> s) & 1 for s in range(bits_num)]
 
-    @ inplace
+    @inplace
     def x(self, target: int, **_):
         for row in self._bits:
             row[target] = 1 - row[target]
         return self
 
-    @ inplace
+    @inplace
     def cx(self, control: int, target: int, **_) -> "TruthTable":
         for row in self._bits:
             if row[control] == 1:
                 row[target] = 1 - row[target]
         return self
 
-    @ inplace
+    @inplace
     def mcx(self, controls: Iterable[int], target: int, **_) -> "TruthTable":
         for row in self._bits:
             if all([row[control] == 1 for control in controls]):
                 row[target] = 1 - row[target]
         return self
 
-    @ inplace
+    @inplace
     def shuffle(self, **_) -> "TruthTable":
         assert self._bits is not None
         new_bits = [copy(row) for row in self.bits()]
@@ -105,7 +109,9 @@ class TruthTable:
         return self
 
     @inplace
-    def permute(self, permutation: list[int], permute_input: bool = True, **_) -> "TruthTable":
+    def permute(
+        self, permutation: list[int], permute_input: bool = True, **_
+    ) -> "TruthTable":
         assert len(permutation) == self._bits_num
         assert sorted(permutation) == list(range(self._bits_num))
 
