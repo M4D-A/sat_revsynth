@@ -6,7 +6,6 @@ from sat.cnf import CNF, Literal
 from sat.solver import Solver
 from itertools import product
 from functools import reduce
-from timeit import default_timer as timer
 
 
 LiteralGrid = list[list[Literal]]
