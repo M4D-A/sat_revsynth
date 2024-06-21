@@ -60,15 +60,15 @@ class TruthTable:
     def __getitem__(self, key):
         return self._bits[key]
 
-    @classmethod
-    def row_to_value(cls, row: list[int]) -> int:
+    @staticmethod
+    def row_to_value(row: list[int]) -> int:
         value = 0
         for i, b in enumerate(row):
             value += 2**i * b
         return value
 
-    @classmethod
-    def value_to_row(cls, value: int, bits_num: int) -> list[int]:
+    @staticmethod
+    def value_to_row(value: int, bits_num: int) -> list[int]:
         return [(value >> s) & 1 for s in range(bits_num)]
 
     @inplace
