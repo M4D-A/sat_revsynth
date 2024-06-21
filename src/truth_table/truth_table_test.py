@@ -6,7 +6,7 @@ from truth_table.truth_table import TruthTable
 
 max_bits_size = 8
 epochs = 2**6
-bits_num_randomizer = list(randint(3, max_bits_size) for _ in range(epochs))
+bits_num_randomizer = [randint(3, max_bits_size) for _ in range(epochs)]
 
 
 @pytest.fixture
@@ -140,7 +140,7 @@ def test_inverse(random_tt, identity_tt):
     inverse_tt = random_tt.inverse(inplace=False)
     rand_values = random_tt.values()
     inv_values = inverse_tt.values()
-    for i in range(2**random_tt.bits_num()):
+    for i in range(2 ** random_tt.bits_num()):
         assert rand_values[inv_values[i]] == i
         assert inv_values[rand_values[i]] == i
     assert random_tt + inverse_tt == identity_tt

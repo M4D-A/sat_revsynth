@@ -7,7 +7,7 @@ from circuit.circuit import Circuit, Gate, TruthTable
 max_bits_num = 5
 max_gates_num = 6
 epochs = 2**6
-bits_num_randomizer = list(randint(3, max_bits_num) for _ in range(epochs))
+bits_num_randomizer = [randint(3, max_bits_num) for _ in range(epochs)]
 
 
 @pytest.fixture
@@ -178,11 +178,11 @@ def test_reverse(random_circuit, identity_tt):
 @pytest.mark.parametrize("bits_num", bits_num_randomizer)
 def test_rotate(random_circuit):
     size = len(random_circuit)
-    shift = randint(-3*size, 3*size)
+    shift = randint(-3 * size, 3 * size)
     rotated_circuit = random_circuit.rotate(shift)
     assert len(random_circuit) == len(rotated_circuit)
     for i, shifted_gate in enumerate(rotated_circuit.gates()):
-        gate = random_circuit.gates()[(i+shift) % size]
+        gate = random_circuit.gates()[(i + shift) % size]
         assert shifted_gate == gate
     re_rotated_circuit = rotated_circuit.rotate(-shift)
     assert re_rotated_circuit == random_circuit
@@ -192,8 +192,7 @@ def test_rotate(random_circuit):
 def test_permute(random_circuit, random_permutations):
     permutation, inv_permutation = random_permutations
     permuted_circuit = random_circuit.permute(permutation)
-    assert permuted_circuit.tt() == random_circuit.tt().permute(
-        permutation, permute_input=True)
+    assert permuted_circuit.tt() == random_circuit.tt().permute(permutation, permute_input=True)
     re_permuted_circuit = permuted_circuit.permute(inv_permutation)
     assert re_permuted_circuit == random_circuit
 
@@ -219,7 +218,7 @@ def test_swap(random_circuit):
 def test_permutations(bits_num):
     circuit = Circuit(bits_num).cx(0, 1)
     permutations = circuit.permutations()
-    assert len(permutations) == bits_num * (bits_num-1)
+    assert len(permutations) == bits_num * (bits_num - 1)
 
     circuit = Circuit(bits_num).x(0)
     permutations = circuit.permutations()
@@ -231,11 +230,11 @@ def test_permutations(bits_num):
 
     circuit = Circuit(bits_num).cx(0, 1).x(1)
     permutations = circuit.permutations()
-    assert len(permutations) == bits_num * (bits_num-1)
+    assert len(permutations) == bits_num * (bits_num - 1)
 
     circuit = Circuit(bits_num).x(0).x(1)
     permutations = circuit.permutations()
-    assert len(permutations) == bits_num * (bits_num-1)
+    assert len(permutations) == bits_num * (bits_num - 1)
 
     circuit = Circuit(bits_num).mcx([0, 1], 2).mcx([0, 2], 1)
     permutations = circuit.permutations()
