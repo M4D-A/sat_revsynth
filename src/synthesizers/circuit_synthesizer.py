@@ -157,7 +157,6 @@ class CircuitSynthesizer:
         return self
 
     def solve(self) -> Circuit | None:
-        start = timer()
         if self._circuit is None:
             line_iter = range(self._width)
             gate_iter = range(self._gate_count)
@@ -166,7 +165,6 @@ class CircuitSynthesizer:
             targets = self._targets
             if not sat:
                 self.circuit = None
-                print(f"{self._gate_count}: {timer() - start}")
                 return self.circuit
             circuit = Circuit(self._width)
             for gid in gate_iter:
@@ -175,5 +173,4 @@ class CircuitSynthesizer:
                 assert len(g_targets) == 1
                 circuit.mcx(g_controls, g_targets[0])
             self._circuit = circuit
-        print(f"{self._gate_count}: {timer() - start}")
         return self._circuit
