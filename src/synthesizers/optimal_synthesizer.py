@@ -33,7 +33,7 @@ class OptimalSynthesizer:
             if self._exc_collection:
                 c_synth.exclude_collection(self._exc_collection)
             circuit = c_synth.solve()
-            if circuit:
+            if circuit is not None:
                 self._circuit = circuit
                 return circuit
         return None

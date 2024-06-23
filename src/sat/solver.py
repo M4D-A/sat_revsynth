@@ -1,4 +1,4 @@
-from pysat.solvers import Cadical153, Lingeling, Glucose4
+from pysat.solvers import Solver as PySolver
 from subprocess import Popen, PIPE
 from sat.cnf import CNF, Solution
 
@@ -14,14 +14,25 @@ class Solver:
         # "parkissat": ["-v=1", "-c=8", "-max-memory=8"]
     }
 
-    builtin_solvers = {
-        "cadical": Cadical153,
-        "lingeling": Lingeling,
-        "glucose4": Glucose4
-    }
+    builtin_solvers = [
+        "cadical103",
+        "cadical153",
+        "gluecard3",
+        "gluecard4",
+        "glucose3",
+        "glucose4",
+        "glucose42",
+        "lingeling",
+        "maplechrono",
+        "maplecm",
+        "maplesat",
+        "mergesat3",
+        "minicard",
+        "minisat22",
+        "minisat-gh",
+    ]
 
-    available_solvers = list(external_solvers.keys()) + \
-        list(builtin_solvers.keys())
+    available_solvers = list(external_solvers.keys()) + builtin_solvers
 
     def __init__(self, name: str, args=None):
         if name not in Solver.available_solvers:
@@ -39,14 +50,16 @@ class Solver:
         return solution
 
     def _solve_builtin(self, cnf: CNF) -> Solution:
-        builtin_solver_class = self.builtin_solvers[self.__name]
         clauses = cnf.clauses()
-        builtin_solver = builtin_solver_class(bootstrap_with=clauses)
-        if builtin_solver.solve():
-            ids = builtin_solver.get_model()
-            return (True, ids)
-        else:
-            return (False, [])
+        with PySolver(name=self.__name, bootstrap_with=clauses) as builtin_solver:
+            if builtin_solver.solve():
+                ids = builtin_solver.get_model()
+                if ids:
+                    return (True, ids)
+                else:
+                    return (False, [])
+            else:
+                return (False, [])
 
     def _solve_external(self, cnf: CNF) -> Solution:
         args = self.external_solvers[self.__name]
@@ -62,9 +75,8 @@ class Solver:
             header = f"p cnf {cnf._cnf.nv} {cls_num}\n"
             out_q.put(header)
             for i in range(0, cls_num, step):
-                clauses_slice = clauses[i: i + step]
-                string = ' 0\n'.join([' '.join([str(lit) for lit in cl])
-                                      for cl in clauses_slice]) + ' 0\n'
+                slice = clauses[i : i + step]
+                string = " 0\n".join([" ".join([str(lit) for lit in cl]) for cl in slice]) + " 0\n"
                 out_q.put(string)
             out_q.put(None)
 
@@ -87,7 +99,7 @@ class Solver:
         assert p.stdout is not None
         out = p.stdout.read()
 
-        string = out.decode('utf-8')
+        string = out.decode("utf-8")
         return self._parse_solution(string)
 
     @staticmethod
@@ -97,7 +109,7 @@ class Solver:
             return (False, [])
 
         def is_int(s):
-            return s.isdigit() or (s[0] == '-' and s[1:].isdigit())
+            return s.isdigit() or (s[0] == "-" and s[1:].isdigit())
 
         ints = [int(s) for s in string.split() if is_int(s)]
         ids = [i for i in ints if i != 0]

@@ -1,19 +1,55 @@
-from sbox.sbox import Sbox
-from random import shuffle
+from truth_table.truth_table import TruthTable
+from synthesizers.optimal_synthesizer import OptimalSynthesizer
+from sat.solver import Solver
+from itertools import permutations
+from tqdm import tqdm
+from random import sample, shuffle
 
-bits = 4
-size = 2**bits
-
-table = list(range(size))
-
-counter = [0] * (bits + 1)
-for i in range(100_000):
-    shuffle(table)
-    sbox = Sbox(bits, table)
-    d1 = sbox.algebraic_degree()
-    counter[d1] += 1
-    if ((i + 1) % 10_000) == 0:
-        print(counter)
+bits = 3
+max_gc = 12
+table_size = pow(2, bits)
+input_table = list(range(table_size))
+inputs = []
+for i in range(10):
+    shuffle(input_table)
+    inputs.append(input_table[:])
 
 
-print(counter)
+solvers = [
+    # "cadical103",
+    # "cadical153",
+    # "cadical195",
+    # "cms",
+    # "gluecard3",
+    # "gluecard4",
+    # "glucose3",
+    # "glucose4",
+    # "glucose42",
+    # "lingeling",
+    # "maplechrono",
+    # "maplecm",
+    # "maplesat",
+    # "mergesat3",
+    # "minicard",
+    # "minisat22",
+    "minisat-gh",
+]
+
+solver = Solver("kissat")
+histogram = [0] * (max_gc + 1)
+fails = 0
+
+for permutation in inputs:
+    tt = TruthTable(bits, list(permutation))
+    os = OptimalSynthesizer(tt, 0, max_gc, solver)
+    qc = os.solve()
+    if qc is not None:
+        qc_size = len(qc)
+        histogram[qc_size] += 1
+    else:
+        fails += 1
+    print(qc)
+
+print(f"Histo: {histogram}")
+print(f"Fails: {fails}")
+print()
