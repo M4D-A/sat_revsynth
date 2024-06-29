@@ -5,7 +5,8 @@ from itertools import permutations
 from tqdm import tqdm
 from random import sample, shuffle
 
-bits = 3
+bits = 4
+
 max_gc = 12
 table_size = pow(2, bits)
 input_table = list(range(table_size))
@@ -15,41 +16,24 @@ for i in range(10):
     inputs.append(input_table[:])
 
 
-solvers = [
-    # "cadical103",
-    # "cadical153",
-    # "cadical195",
-    # "cms",
-    # "gluecard3",
-    # "gluecard4",
-    # "glucose3",
-    # "glucose4",
-    # "glucose42",
-    # "lingeling",
-    # "maplechrono",
-    # "maplecm",
-    # "maplesat",
-    # "mergesat3",
-    # "minicard",
-    # "minisat22",
-    "minisat-gh",
-]
+solvers = ["minisat-gh", "kissat"]
 
-solver = Solver("kissat")
-histogram = [0] * (max_gc + 1)
-fails = 0
+for s in solvers:
+    solver = Solver(s)
+    histogram = [0] * (max_gc + 1)
+    fails = 0
 
-for permutation in inputs:
-    tt = TruthTable(bits, list(permutation))
-    os = OptimalSynthesizer(tt, 0, max_gc, solver)
-    qc = os.solve()
-    if qc is not None:
-        qc_size = len(qc)
-        histogram[qc_size] += 1
-    else:
-        fails += 1
-    print(qc)
+    for permutation in tqdm(inputs):
+        tt = TruthTable(bits, list(permutation))
+        os = OptimalSynthesizer(tt, 0, max_gc, solver)
+        qc = os.solve()
+        if qc is not None:
+            qc_size = len(qc)
+            histogram[qc_size] += 1
+        else:
+            fails += 1
+        print(qc)
 
-print(f"Histo: {histogram}")
-print(f"Fails: {fails}")
-print()
+    print(f"Histo: {histogram}")
+    print(f"Fails: {fails}")
+    print()
