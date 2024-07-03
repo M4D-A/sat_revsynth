@@ -1,9 +1,8 @@
 from truth_table.truth_table import TruthTable
 from synthesizers.optimal_synthesizer import OptimalSynthesizer
 from sat.solver import Solver
-from itertools import permutations
 from tqdm import tqdm
-from random import sample, shuffle
+from random import shuffle
 
 bits = 4
 

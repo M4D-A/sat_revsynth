@@ -7,7 +7,7 @@ from sat.cnf import CNF
 from sat.solver import Solver
 
 
-solver_names = Solver.builtin_solvers.keys()
+solver_names = Solver.builtin_solvers
 solvers = [Solver(solver_name) for solver_name in solver_names]
 max_variables = 16
 epochs = range(32)
@@ -16,7 +16,7 @@ epochs = range(32)
 @pytest.fixture
 def triplet_cnf():
     cnf = CNF()
-    literals = cnf.reserve_names(['a', 'b', 'c'])
+    literals = cnf.reserve_names(["a", "b", "c"])
     return (cnf, literals)
 
 
@@ -35,7 +35,7 @@ def test_equals_true(triplet_cnf, solver):
     cnf.equals(a, b).set_literal(a)
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert model['sat']
+    assert model["sat"]
     assert model[a.name()]
     assert model[b.name()]
     assert c.name() in model
@@ -47,7 +47,7 @@ def test_equals_false(triplet_cnf, solver):
     cnf.equals(a, b).set_literal(-b)
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert model['sat']
+    assert model["sat"]
     assert not model[a.name()]
     assert not model[b.name()]
     assert c.name() in model
@@ -59,7 +59,7 @@ def test_equals_unsat(triplet_cnf, solver):
     cnf.equals(a, b).set_literals([a, -b])
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert not model['sat']
+    assert not model["sat"]
 
 
 @pytest.mark.parametrize("solver", [s for s in solvers])
@@ -68,7 +68,7 @@ def test_and_true(triplet_cnf, solver):
     cnf.equals_and(a, [b, c]).set_literal(a)
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert model['sat']
+    assert model["sat"]
     assert model[a.name()]
     assert model[b.name()]
     assert model[c.name()]
@@ -80,7 +80,7 @@ def test_and_false(triplet_cnf, solver):
     cnf.equals_and(a, [b, c]).set_literal(-a)
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert model['sat']
+    assert model["sat"]
     assert not model[a.name()]
     assert not model[b.name()] or not model[c.name()]
 
@@ -91,7 +91,7 @@ def test_and_unsat(triplet_cnf, solver):
     cnf.equals_and(a, [b, c]).set_literals([a, -b])
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert not model['sat']
+    assert not model["sat"]
 
 
 @pytest.mark.parametrize("solver", [s for s in solvers for _ in epochs])
@@ -100,7 +100,7 @@ def test_and_true_long(long_cnf, solver):
     cnf.equals_and(primary, literals).set_literal(primary)
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert model['sat']
+    assert model["sat"]
     assert model[primary.name()]
     assert all(model[lit.name()] for lit in literals)
 
@@ -111,7 +111,7 @@ def test_and_false_long(long_cnf, solver):
     cnf.equals_and(primary, literals).set_literal(-primary)
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert model['sat']
+    assert model["sat"]
     assert not model[primary.name()]
     assert any(not model[lit.name()] for lit in literals)
 
@@ -123,7 +123,7 @@ def test_and_unsat_long(long_cnf, solver):
         cnf.equals_and(primary, literals).set_literals([primary, -literals[0]])
         solution = solver.solve(cnf)
         model = cnf.make_dict_model(solution)
-        assert not model['sat']
+        assert not model["sat"]
 
 
 @pytest.mark.parametrize("solver", [s for s in solvers])
@@ -132,7 +132,7 @@ def test_or_true(triplet_cnf, solver):
     cnf.equals_or(a, [b, c]).set_literal(a)
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert model['sat']
+    assert model["sat"]
     assert model[a.name()]
     assert model[b.name()] or model[c.name()]
 
@@ -143,7 +143,7 @@ def test_or_false(triplet_cnf, solver):
     cnf.equals_or(a, [b, c]).set_literal(-a)
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert model['sat']
+    assert model["sat"]
     assert not model[a.name()]
     assert not model[b.name()]
     assert not model[c.name()]
@@ -155,7 +155,7 @@ def test_or_unsat(triplet_cnf, solver):
     cnf.equals_or(a, [b, c]).set_literals([-a, b])
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert not model['sat']
+    assert not model["sat"]
 
 
 @pytest.mark.parametrize("solver", [s for s in solvers for _ in epochs])
@@ -164,7 +164,7 @@ def test_or_true_long(long_cnf, solver):
     cnf.equals_or(primary, literals).set_literal(primary)
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert model['sat']
+    assert model["sat"]
     assert model[primary.name()]
     assert any(model[lit.name()] for lit in literals)
 
@@ -175,7 +175,7 @@ def test_or_false_long(long_cnf, solver):
     cnf.equals_or(primary, literals).set_literal(-primary)
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert model['sat']
+    assert model["sat"]
     assert not model[primary.name()]
     assert all(not model[lit.name()] for lit in literals)
 
@@ -186,7 +186,7 @@ def test_or_unsat_long(long_cnf, solver):
     cnf.equals_or(primary, literals).set_literals([-primary, literals[0]])
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert not model['sat']
+    assert not model["sat"]
 
 
 @pytest.mark.parametrize("solver", [s for s in solvers])
@@ -195,7 +195,7 @@ def test_xor_true(triplet_cnf, solver):
     cnf.xor([a, b, c]).set_literal(a)
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert model['sat']
+    assert model["sat"]
     assert model[a.name()]
     assert model[b.name()] ^ model[c.name()]
 
@@ -206,7 +206,7 @@ def test_xor_false(triplet_cnf, solver):
     cnf.xor([a, b, c]).set_literal(-a)
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert model['sat']
+    assert model["sat"]
     assert not model[a.name()]
     assert not (model[b.name()] ^ model[c.name()])
 
@@ -217,7 +217,7 @@ def test_xor_unsat(triplet_cnf, solver):
     cnf.xor([a, b, c]).set_literals([a, b, c])
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert not model['sat']
+    assert not model["sat"]
 
 
 @pytest.mark.parametrize("solver", [s for s in solvers for _ in epochs])
@@ -232,7 +232,7 @@ def test_xor_true_long(long_cnf, solver):
     for lit in literals_to_set:
         name = lit.name()
         if lit in set_literals:
-            assert (model[name])
+            assert model[name]
             if -lit in set_literals:
                 assert not model[name]
         value_map = map(lambda var: model[var.name()], literals)
@@ -253,7 +253,7 @@ def test_atleast(long_cnf, solver):
     cnf.set_literals(set_literals)
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert model['sat']
+    assert model["sat"]
     assert sum([model[lit.name()] for lit in literals]) >= lower_bound
 
 
@@ -270,5 +270,5 @@ def test_atmost(long_cnf, solver):
     cnf.set_literals(set_literals)
     solution = solver.solve(cnf)
     model = cnf.make_dict_model(solution)
-    assert model['sat']
+    assert model["sat"]
     assert sum([model[lit.name()] for lit in literals]) <= upper_bound

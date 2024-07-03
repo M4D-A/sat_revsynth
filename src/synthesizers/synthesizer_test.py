@@ -5,7 +5,7 @@ from truth_table.truth_table import TruthTable
 from synthesizers.circuit_synthesizer import CircuitSynthesizer
 
 
-solver_names = Solver.builtin_solvers.keys()
+solver_names = Solver.builtin_solvers
 solvers = [Solver(solver_name) for solver_name in solver_names]
 max_bits_size = 8
 epochs = 2**6
